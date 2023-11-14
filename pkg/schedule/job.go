@@ -17,10 +17,22 @@
 package schedule
 
 type Job struct {
-	Name  string
-	Tasks []Task
+	Name   string
+	Tasks  []Task
+	Status JobStatus
 }
 
 type Task interface {
 	Execute()
+	Notify(n chan JobStatus)
 }
+
+type JobStatus int
+
+const (
+	JobStatusNone JobStatus = iota
+	JobStatusPending
+	JobStatusStarted
+	JobStatusInProgress
+	JobStatusCompleted
+)

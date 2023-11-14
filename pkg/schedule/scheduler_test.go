@@ -76,3 +76,6 @@ type TaskMock struct{}
 func (m TaskMock) Execute() {
 	return
 }
+func (m TaskMock) Notify(n chan JobStatus) {
+	return
+}
