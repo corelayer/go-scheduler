@@ -31,7 +31,7 @@ func TestNewRepository(t *testing.T) {
 	r := NewMemoryRepository(ctx)
 
 	r.mux.Lock()
-	result := cap(r.jobs)
+	result := len(r.jobs)
 	r.mux.Unlock()
 	wanted := 0
 
@@ -116,10 +116,6 @@ func TestMemoryRepository_Schedulable(t *testing.T) {
 	result := r.Schedulable(0)
 	wanted := 10
 
-	// for _, job := range result {
-	// 	t.Logf(job.Name)
-	// }
-
 	if len(result) != wanted {
 		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
 	}
@@ -141,10 +137,6 @@ func TestMemoryRepository_Schedulable2(t *testing.T) {
 	result := r.Schedulable(5)
 	wanted := 5
 
-	// for _, job := range result {
-	// 	t.Logf(job.Name)
-	// }
-
 	if len(result) != wanted {
 		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
 	}
@@ -155,14 +147,14 @@ func TestRepository_Update(t *testing.T) {
 	r := NewMemoryRepository(ctx)
 
 	id := uuid.New()
-	r.jobs = append(r.jobs, Job{
+	r.jobs[id] = Job{
 		Uuid:   id,
 		Name:   "test1",
 		Tasks:  nil,
 		Status: JobStatusNone,
-	})
+	}
 
-	_ = r.updateJob(Job{
+	r.Update(Job{
 		Uuid:   id,
 		Name:   "testUpdated",
 		Tasks:  nil,
@@ -170,7 +162,7 @@ func TestRepository_Update(t *testing.T) {
 	})
 
 	r.mux.Lock()
-	result := r.jobs[0]
+	result := r.jobs[id]
 	r.mux.Unlock()
 	wanted := "testUpdated"
 
@@ -183,12 +175,13 @@ func TestRepository_Update2(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryRepository(ctx)
 
-	r.jobs = append(r.jobs, Job{
-		Uuid:   uuid.New(),
+	uuid1 := uuid.New()
+	r.jobs[uuid1] = Job{
+		Uuid:   uuid1,
 		Name:   "test1",
 		Tasks:  nil,
 		Status: JobStatusNone,
-	})
+	}
 
 	r.Update(Job{
 		Uuid:   uuid.New(),
@@ -198,7 +191,7 @@ func TestRepository_Update2(t *testing.T) {
 	})
 
 	r.mux.Lock()
-	result := r.jobs[0]
+	result := r.jobs[uuid1]
 	r.mux.Unlock()
 	wanted := "test1"
 
@@ -212,52 +205,36 @@ func TestMemoryRepository_deleteJob(t *testing.T) {
 	r := NewMemoryRepository(ctx)
 
 	uuids := make([]uuid.UUID, 10)
-
+	jobs := make(map[uuid.UUID]Job)
 	for i := 0; i < 10; i++ {
 		id := uuid.New()
 		uuids[i] = id
-		r.addJob(Job{
+		jobs[id] = Job{
 			Uuid: id,
 			Name: strconv.Itoa(i),
-		})
+		}
 	}
 
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(9)
-	r.mux.Lock()
-	deletedJob := r.jobs[d]
-	// t.Logf("deleting job %s", deletedJob.Name)
-	r.mux.Unlock()
 
 	r.deleteJob(uuids[d])
 
-	t.Run("Length", func(t *testing.T) {
-		r.mux.Lock()
-		result := len(r.jobs)
-		wanted := 9
-		r.mux.Unlock()
-		if result != wanted {
-			t.Errorf("repository length is %d, expected %d", result, wanted)
-		}
-	})
+	r.mux.Lock()
+	j := r.jobs
+	r.mux.Unlock()
 
-	t.Run("Content", func(t *testing.T) {
-		r.mux.Lock()
-		jobs := r.jobs
-		r.mux.Unlock()
-
-		stillExists := false
-		for _, job := range jobs {
-			if job.Uuid == deletedJob.Uuid {
-				stillExists = true
-				break
-			}
+	stillExists := false
+	for _, job := range j {
+		if job.Uuid == uuids[d] {
+			stillExists = true
+			break
 		}
+	}
 
-		if stillExists {
-			t.Errorf("error deleting job %s", deletedJob.Name)
-		}
-	})
+	if stillExists {
+		t.Errorf("error deleting job %s", j[uuids[d]].Name)
+	}
 }
 
 func BenchmarkRepository_Add(b *testing.B) {
@@ -279,14 +256,16 @@ func BenchmarkRepository_Update(b *testing.B) {
 	r := NewMemoryRepository(ctx)
 
 	id := uuid.New()
-	r.Add(Job{
+	r.addJob(Job{
 		Uuid:   id,
 		Name:   "testJob",
 		Tasks:  nil,
 		Status: JobStatusNone,
 	})
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = r.updateJob(Job{
+		r.Update(Job{
 			Uuid:   id,
 			Name:   "testJob" + strconv.Itoa(i),
 			Tasks:  nil,

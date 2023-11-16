@@ -18,7 +18,6 @@ package schedule
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -26,18 +25,18 @@ import (
 
 func NewMemoryRepository(ctx context.Context) *MemoryRepository {
 	r := MemoryRepository{
-		jobs:     make([]Job, 0),
+		jobs:     make(map[uuid.UUID]Job, 0),
 		chInput:  make(chan Job, 10),
 		chDelete: make(chan uuid.UUID, 10),
 		chUpdate: make(chan Job),
 		mux:      sync.Mutex{},
 	}
-	go r.handleJobs(ctx)
+	go r.handleOperations(ctx)
 	return &r
 }
 
 type MemoryRepository struct {
-	jobs     []Job
+	jobs     map[uuid.UUID]Job
 	chInput  chan Job
 	chDelete chan uuid.UUID
 	chUpdate chan Job
@@ -51,11 +50,25 @@ func (r *MemoryRepository) Add(job Job) {
 func (r *MemoryRepository) All() []Job {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	return r.jobs
+	var jobs []Job
+	for _, job := range r.jobs {
+		jobs = append(jobs, job)
+	}
+	return jobs
 }
 
 func (r *MemoryRepository) Delete(uuid uuid.UUID) {
 	r.chDelete <- uuid
+}
+
+func (r *MemoryRepository) Exists(uuid uuid.UUID) bool {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+
+	if _, found := r.jobs[uuid]; found {
+		return true
+	}
+	return false
 }
 
 func (r *MemoryRepository) Schedulable(limit int) []Job {
@@ -83,39 +96,24 @@ func (r *MemoryRepository) Update(job Job) {
 func (r *MemoryRepository) addJob(job Job) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	r.jobs = append(r.jobs, job)
+
+	r.jobs[job.Uuid] = job
 }
 
 func (r *MemoryRepository) deleteJob(uuid uuid.UUID) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	var id int
-
-	for i, j := range r.jobs {
-		if j.Uuid == uuid {
-			id = i
-			break
-		}
-	}
-
-	r.jobs[id] = r.jobs[len(r.jobs)-1]
-	r.jobs = r.jobs[:len(r.jobs)-1]
+	delete(r.jobs, uuid)
 }
 
-func (r *MemoryRepository) updateJob(job Job) error {
+func (r *MemoryRepository) updateJob(job Job) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	for i, k := range r.jobs {
-		if k.Uuid == job.Uuid {
-			r.jobs[i] = job
-			return nil
-		}
-	}
-	return fmt.Errorf("could not update job, not found")
+	r.jobs[job.Uuid] = job
 }
 
-func (r *MemoryRepository) handleJobs(ctx context.Context) {
+func (r *MemoryRepository) handleOperations(ctx context.Context) {
 	for {
 		select {
 		case job, ok := <-r.chInput:
@@ -132,10 +130,7 @@ func (r *MemoryRepository) handleJobs(ctx context.Context) {
 			if !ok {
 				return
 			}
-			err := r.updateJob(job)
-			if err != nil {
-				r.chInput <- job
-			}
+			r.updateJob(job)
 		case <-ctx.Done():
 			return
 		}
