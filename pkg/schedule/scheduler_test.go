@@ -31,7 +31,7 @@ func TestNewScheduler(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
-			Uuid:   uuid.UUID{},
+			Uuid:   uuid.New(),
 			Name:   strconv.Itoa(i),
 			Tasks:  nil,
 			Status: JobStatusNone,

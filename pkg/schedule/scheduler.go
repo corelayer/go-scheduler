@@ -19,18 +19,38 @@ package schedule
 import (
 	"context"
 	"strconv"
-	"sync"
 	"time"
 )
 
+func NewSchedulerConfig() SchedulerConfig {
+	return SchedulerConfig{
+		StartDelaySeconds:             0,
+		ScheduleDelaySeconds:          1,
+		NoSchedulableJobsDelaySeconds: 5,
+		MaxSchedulableJobs:            10,
+	}
+}
+
 type SchedulerConfig struct {
-	StartDelaySeconds  int
-	MaxSchedulableJobs int
+	StartDelaySeconds             int
+	ScheduleDelaySeconds          int
+	NoSchedulableJobsDelaySeconds int
+	MaxSchedulableJobs            int
 }
 
 func (c *SchedulerConfig) GetStartDelay() time.Duration {
-	timeout, _ := time.ParseDuration(strconv.Itoa(c.StartDelaySeconds))
-	return timeout
+	d, _ := time.ParseDuration(strconv.Itoa(c.StartDelaySeconds))
+	return d
+}
+
+func (c *SchedulerConfig) GetScheduleDelay() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelaySeconds))
+	return d
+}
+
+func (c *SchedulerConfig) GetNoJobsSchedulableDelay() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.NoSchedulableJobsDelaySeconds))
+	return d
 }
 
 func NewScheduler(ctx context.Context, c SchedulerConfig, r Repository) *Scheduler {
@@ -38,11 +58,8 @@ func NewScheduler(ctx context.Context, c SchedulerConfig, r Repository) *Schedul
 		config: c,
 		jobs:   r,
 		queue:  NewJobQueue(ctx),
-		// chIn:  make(chan *Job),
 	}
 	go s.schedule(ctx)
-	// go s.run(ctx)
-	// go s.process(ctx)
 	return s
 }
 
@@ -50,8 +67,6 @@ type Scheduler struct {
 	config SchedulerConfig
 	jobs   Repository
 	queue  *JobQueue
-	// chIn       chan *Job
-	mux sync.Mutex
 }
 
 func (s *Scheduler) schedule(ctx context.Context) {
@@ -61,7 +76,6 @@ func (s *Scheduler) schedule(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			s.mux.Lock()
 			jobs := s.jobs.Schedulable(s.config.MaxSchedulableJobs)
 			if jobs != nil {
 				for _, job := range jobs {
@@ -69,9 +83,10 @@ func (s *Scheduler) schedule(ctx context.Context) {
 					s.jobs.Update(job)
 					s.queue.Add(job)
 				}
+				time.Sleep(s.config.GetScheduleDelay() * time.Second)
+			} else {
+				time.Sleep(s.config.GetNoJobsSchedulableDelay() * time.Second)
 			}
-			s.mux.Unlock()
-			time.Sleep(2 * time.Second)
 		}
 	}
 }
