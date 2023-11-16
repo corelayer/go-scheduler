@@ -24,16 +24,16 @@ import (
 
 func NewJobQueue(ctx context.Context) *JobQueue {
 	s := &JobQueue{
-		jobs: make([]*Job, 0),
-		chIn: make(chan *Job, 10),
+		jobs: make([]Job, 0),
+		chIn: make(chan Job, 10),
 	}
 	go s.handleJobInput(ctx)
 	return s
 }
 
 type JobQueue struct {
-	jobs []*Job
-	chIn chan *Job
+	jobs []Job
+	chIn chan Job
 
 	mux sync.Mutex
 }
@@ -45,11 +45,11 @@ func (s *JobQueue) Capacity() int {
 	return cap(s.jobs)
 }
 
-func (s *JobQueue) Add(job *Job) {
+func (s *JobQueue) Add(job Job) {
 	s.chIn <- job
 }
 
-func (s *JobQueue) Get() (*Job, error) {
+func (s *JobQueue) Get() (Job, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	if len(s.jobs) > 0 {
@@ -57,7 +57,7 @@ func (s *JobQueue) Get() (*Job, error) {
 		s.jobs = s.jobs[1:]
 		return job, nil
 	}
-	return nil, fmt.Errorf("no jobs available")
+	return Job{}, fmt.Errorf("no jobs available")
 }
 
 func (s *JobQueue) handleJobInput(ctx context.Context) {

@@ -16,35 +16,22 @@
 
 package schedule
 
-import "github.com/google/uuid"
-
-type Job struct {
-	Uuid   uuid.UUID
-	Name   string
-	Tasks  []Task
-	Status JobStatus
-}
-
-func (j *Job) IsSchedulable() bool {
-	if j.Status == JobStatusSchedulable {
-		return true
-	}
-	return false
-}
-
-type Task interface {
-	Execute()
-	Notify(n chan JobStatus)
-}
-
-type JobStatus int
-
-const (
-	JobStatusNone JobStatus = iota
-	JobStatusSchedulable
-	JobStatusScheduled
-	JobStatusPending
-	JobStatusStarted
-	JobStatusInProgress
-	JobStatusCompleted
+import (
+	"github.com/google/uuid"
 )
+
+type Repository interface {
+	RepositoryReader
+	RepositoryWriter
+}
+
+type RepositoryReader interface {
+	All() []Job
+	Schedulable(limit int) []Job
+}
+
+type RepositoryWriter interface {
+	Add(job Job)
+	Update(job Job)
+	Delete(uuid uuid.UUID)
+}

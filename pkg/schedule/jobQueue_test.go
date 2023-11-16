@@ -26,7 +26,7 @@ func TestJobQueue_Add(t *testing.T) {
 	jl := NewJobQueue(ctx)
 
 	for i := 0; i < 20; i++ {
-		jl.Add(&Job{Name: "test"})
+		jl.Add(Job{Name: "test"})
 	}
 }
 
@@ -48,7 +48,7 @@ func TestJobQueue_Get(t *testing.T) {
 	tests := make([]string, 10)
 
 	for i := 0; i < 10; i++ {
-		jl.Add(&Job{Name: "test"})
+		jl.Add(Job{Name: "test"})
 		tests[i] = "test"
 	}
 
@@ -62,10 +62,10 @@ func TestJobQueue_Get(t *testing.T) {
 			}
 
 			switch out := interface{}(result).(type) {
-			case *Job:
+			case Job:
 				return
 			default:
-				t.Errorf("got %s, expected *Job", out)
+				t.Errorf("got %s, expected Job", out)
 			}
 
 		})
@@ -101,6 +101,6 @@ func BenchmarkJobQueue_Add(b *testing.B) {
 	jl := NewJobQueue(ctx)
 
 	for i := 0; i < b.N; i++ {
-		jl.Add(&Job{Name: "test"})
+		jl.Add(Job{Name: "test"})
 	}
 }
