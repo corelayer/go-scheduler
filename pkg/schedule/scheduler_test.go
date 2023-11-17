@@ -36,7 +36,6 @@ func TestNewScheduler(t *testing.T) {
 			Tasks:  nil,
 			Status: JobStatusNone,
 		})
-		// t.Logf("adding job %d", i)
 	}
 	s := NewScheduler(ctx, c, r)
 
@@ -51,9 +50,55 @@ func TestNewScheduler(t *testing.T) {
 func TestNewScheduler2(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := SchedulerConfig{StartDelaySeconds: 5}
-	NewScheduler(ctx, c, nil)
+	NewScheduler(ctx, c, NewMemoryRepository(ctx))
 
 	cancel()
+}
+
+func TestNewScheduler3(t *testing.T) {
+	ctx := context.Background()
+	c := NewSchedulerConfig()
+	s := NewScheduler(ctx, c, NewMemoryRepository(ctx))
+
+	jobs := s.jobs.Schedulable(c.MaxSchedulableJobs)
+
+	result := len(jobs)
+	wanted := 0
+	if result != 0 {
+		t.Errorf("found %d schedulable jobs, expected %d", result, wanted)
+	}
+}
+
+func TestNewScheduler4(t *testing.T) {
+	ctx := context.Background()
+
+	r := NewMemoryRepository(ctx)
+	for i := 0; i < 10; i++ {
+		r.addJob(Job{
+			Uuid:   uuid.New(),
+			Name:   strconv.Itoa(i),
+			Tasks:  nil,
+			Status: JobStatusSchedulable,
+		})
+	}
+	c := NewSchedulerConfig()
+	s := NewScheduler(ctx, c, r)
+
+	jobs := s.jobs.Schedulable(c.MaxSchedulableJobs)
+
+	result := len(jobs)
+	wanted := 10
+	if result != wanted {
+		t.Errorf("found %d schedulable jobs, expected %d", result, wanted)
+	}
+
+	jobs2 := s.jobs.Schedulable(c.MaxSchedulableJobs)
+
+	result2 := len(jobs2)
+	wanted2 := 10
+	if result2 != wanted2 {
+		t.Errorf("found %d schedulable jobs, expected %d", result2, wanted2)
+	}
 }
 
 //

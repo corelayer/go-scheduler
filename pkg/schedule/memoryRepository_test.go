@@ -68,6 +68,13 @@ func TestNewRepository5(t *testing.T) {
 	close(r.chUpdate)
 }
 
+func TestNewRepository6(t *testing.T) {
+	ctx := context.Background()
+	r := NewMemoryRepository(ctx)
+
+	close(r.chActivate)
+}
+
 func TestRepository_Add(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryRepository(ctx)
@@ -112,7 +119,6 @@ func TestMemoryRepository_Schedulable(t *testing.T) {
 			Status: JobStatusSchedulable,
 		})
 	}
-
 	result := r.Schedulable(0)
 	wanted := 10
 
@@ -183,7 +189,7 @@ func TestRepository_Update2(t *testing.T) {
 		Status: JobStatusNone,
 	}
 
-	r.Update(Job{
+	r.updateJob(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
 		Tasks:  nil,
@@ -241,6 +247,7 @@ func BenchmarkRepository_Add(b *testing.B) {
 	ctx := context.Background()
 	r := NewMemoryRepository(ctx)
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		r.Add(Job{
 			Uuid:   uuid.New(),
@@ -256,7 +263,7 @@ func BenchmarkRepository_Update(b *testing.B) {
 	r := NewMemoryRepository(ctx)
 
 	id := uuid.New()
-	r.addJob(Job{
+	r.Add(Job{
 		Uuid:   id,
 		Name:   "testJob",
 		Tasks:  nil,

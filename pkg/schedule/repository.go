@@ -31,6 +31,7 @@ type RepositoryReader interface {
 }
 
 type RepositoryWriter interface {
+	Activate(uuid uuid.UUID)
 	Add(job Job)
 	Update(job Job)
 	Delete(uuid uuid.UUID)

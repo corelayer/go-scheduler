@@ -60,6 +60,7 @@ func NewScheduler(ctx context.Context, c SchedulerConfig, r Repository) *Schedul
 		queue:  NewJobQueue(ctx),
 	}
 	go s.schedule(ctx)
+	go s.verifySchedule(ctx)
 	return s
 }
 
@@ -81,11 +82,31 @@ func (s *Scheduler) schedule(ctx context.Context) {
 				for _, job := range jobs {
 					job.Status = JobStatusScheduled
 					s.jobs.Update(job)
-					s.queue.Add(job)
+					// s.queue.Add(job)
 				}
-				time.Sleep(s.config.GetScheduleDelay() * time.Second)
+				// time.Sleep(s.config.GetScheduleDelay() * time.Second)
 			} else {
 				time.Sleep(s.config.GetNoJobsSchedulableDelay() * time.Second)
+			}
+		}
+	}
+}
+
+func (s *Scheduler) verifySchedule(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			jobs := s.jobs.All()
+			if jobs != nil {
+				for _, job := range jobs {
+					if job.Activate() {
+						s.jobs.Activate(job.Uuid)
+					}
+				}
+			} else {
+				time.Sleep(s.config.GetScheduleDelay() * time.Second)
 			}
 		}
 	}

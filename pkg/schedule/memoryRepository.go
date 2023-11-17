@@ -25,22 +25,28 @@ import (
 
 func NewMemoryRepository(ctx context.Context) *MemoryRepository {
 	r := MemoryRepository{
-		jobs:     make(map[uuid.UUID]Job, 0),
-		chInput:  make(chan Job, 10),
-		chDelete: make(chan uuid.UUID, 10),
-		chUpdate: make(chan Job),
-		mux:      sync.Mutex{},
+		jobs:       make(map[uuid.UUID]Job, 0),
+		chInput:    make(chan Job),
+		chDelete:   make(chan uuid.UUID),
+		chUpdate:   make(chan Job),
+		chActivate: make(chan uuid.UUID),
+		mux:        sync.Mutex{},
 	}
 	go r.handleOperations(ctx)
 	return &r
 }
 
 type MemoryRepository struct {
-	jobs     map[uuid.UUID]Job
-	chInput  chan Job
-	chDelete chan uuid.UUID
-	chUpdate chan Job
-	mux      sync.Mutex
+	jobs       map[uuid.UUID]Job
+	chInput    chan Job
+	chDelete   chan uuid.UUID
+	chUpdate   chan Job
+	chActivate chan uuid.UUID
+	mux        sync.Mutex
+}
+
+func (r *MemoryRepository) Activate(uuid uuid.UUID) {
+	r.chActivate <- uuid
 }
 
 func (r *MemoryRepository) Add(job Job) {
@@ -50,7 +56,7 @@ func (r *MemoryRepository) Add(job Job) {
 func (r *MemoryRepository) All() []Job {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	var jobs []Job
+	var jobs = make([]Job, 0)
 	for _, job := range r.jobs {
 		jobs = append(jobs, job)
 	}
@@ -61,18 +67,18 @@ func (r *MemoryRepository) Delete(uuid uuid.UUID) {
 	r.chDelete <- uuid
 }
 
-func (r *MemoryRepository) Exists(uuid uuid.UUID) bool {
-	r.mux.Lock()
-	defer r.mux.Unlock()
-
-	if _, found := r.jobs[uuid]; found {
-		return true
-	}
-	return false
-}
+// func (r *MemoryRepository) Exists(uuid uuid.UUID) bool {
+// 	r.mux.Lock()
+// 	defer r.mux.Unlock()
+//
+// 	if _, found := r.jobs[uuid]; found {
+// 		return true
+// 	}
+// 	return false
+// }
 
 func (r *MemoryRepository) Schedulable(limit int) []Job {
-	var output []Job
+	var output = make([]Job, 0)
 
 	r.mux.Lock()
 	defer r.mux.Unlock()
@@ -90,6 +96,15 @@ func (r *MemoryRepository) Schedulable(limit int) []Job {
 }
 
 func (r *MemoryRepository) Update(job Job) {
+	r.chUpdate <- job
+}
+
+func (r *MemoryRepository) activateJob(uuid uuid.UUID) {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+
+	job := r.jobs[uuid]
+	job.Status = JobStatusSchedulable
 	r.chUpdate <- job
 }
 
@@ -131,6 +146,11 @@ func (r *MemoryRepository) handleOperations(ctx context.Context) {
 				return
 			}
 			r.updateJob(job)
+		case jobId, ok := <-r.chActivate:
+			if !ok {
+				return
+			}
+			r.activateJob(jobId)
 		case <-ctx.Done():
 			return
 		}

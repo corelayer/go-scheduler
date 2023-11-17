@@ -25,6 +25,10 @@ type Job struct {
 	Status JobStatus
 }
 
+func (j *Job) Activate() bool {
+	return true
+}
+
 func (j *Job) IsSchedulable() bool {
 	if j.Status == JobStatusSchedulable {
 		return true
@@ -46,5 +50,6 @@ const (
 	JobStatusPending
 	JobStatusStarted
 	JobStatusInProgress
+	JobStatusReady
 	JobStatusCompleted
 )

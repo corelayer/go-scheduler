@@ -96,11 +96,11 @@ func TestJobQueue_Capacity(t *testing.T) {
 	}
 }
 
-func BenchmarkJobQueue_Add(b *testing.B) {
-	ctx := context.Background()
-	jl := NewJobQueue(ctx)
-
-	for i := 0; i < b.N; i++ {
-		jl.Add(Job{Name: "test"})
-	}
-}
+// func BenchmarkJobQueue_Add(b *testing.B) {
+// 	ctx := context.Background()
+// 	jl := NewJobQueue(ctx)
+//
+// 	for i := 0; i < b.N; i++ {
+// 		jl.Add(Job{Name: "test"})
+// 	}
+// }
