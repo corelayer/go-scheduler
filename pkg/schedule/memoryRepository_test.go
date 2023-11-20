@@ -249,7 +249,7 @@ func BenchmarkRepository_Add(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r.Add(Job{
+		r.addJob(Job{
 			Uuid:   uuid.New(),
 			Name:   "testJob",
 			Tasks:  nil,
@@ -263,7 +263,7 @@ func BenchmarkRepository_Update(b *testing.B) {
 	r := NewMemoryRepository(ctx)
 
 	id := uuid.New()
-	r.Add(Job{
+	r.addJob(Job{
 		Uuid:   id,
 		Name:   "testJob",
 		Tasks:  nil,
@@ -272,7 +272,7 @@ func BenchmarkRepository_Update(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r.Update(Job{
+		r.updateJob(Job{
 			Uuid:   id,
 			Name:   "testJob" + strconv.Itoa(i),
 			Tasks:  nil,
