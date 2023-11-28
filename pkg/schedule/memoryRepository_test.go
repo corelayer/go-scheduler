@@ -113,10 +113,11 @@ func TestMemoryRepository_Schedulable(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
-			Uuid:   uuid.New(),
-			Name:   strconv.Itoa(i),
-			Tasks:  nil,
-			Status: JobStatusSchedulable,
+			Uuid:    uuid.New(),
+			Name:    strconv.Itoa(i),
+			Tasks:   nil,
+			Status:  JobStatusSchedulable,
+			Enabled: true,
 		})
 	}
 	result := r.Schedulable(0)
@@ -133,10 +134,11 @@ func TestMemoryRepository_Schedulable2(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
-			Uuid:   uuid.New(),
-			Name:   strconv.Itoa(i),
-			Tasks:  nil,
-			Status: JobStatusSchedulable,
+			Uuid:    uuid.New(),
+			Name:    strconv.Itoa(i),
+			Tasks:   nil,
+			Status:  JobStatusSchedulable,
+			Enabled: true,
 		})
 	}
 

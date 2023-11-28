@@ -15,4 +15,4 @@
 # *    limitations under the License.
 # */
 
-go test -bench=. ./... --race -benchmem
+go test -bench=. ./... --race -benchmem -benchtime=5s

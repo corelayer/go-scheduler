@@ -19,10 +19,12 @@ package schedule
 import "github.com/google/uuid"
 
 type Job struct {
-	Uuid   uuid.UUID
-	Name   string
-	Tasks  []Task
-	Status JobStatus
+	Uuid    uuid.UUID
+	Enabled bool
+	Status  JobStatus
+	Cron    string `validate:"cron"`
+	Name    string
+	Tasks   []Task
 }
 
 func (j *Job) Activate() bool {
@@ -30,6 +32,9 @@ func (j *Job) Activate() bool {
 }
 
 func (j *Job) IsSchedulable() bool {
+	if !j.Enabled {
+		return false
+	}
 	if j.Status == JobStatusSchedulable {
 		return true
 	}

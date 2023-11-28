@@ -19,12 +19,16 @@ package schedule
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
 
 var reSpace = regexp.MustCompile(`\s+`)
 var reYear = regexp.MustCompile(`\d{4}`)
+
+var reSecond = regexp.MustCompile(`^([1-5]?\d)(,([1-5]?\d))*$|^\*/[2-6]$|^\*/10$|^\*/12$|^\*/15$|^\*/20$|^\*/30$`)
+var reMinute = regexp.MustCompile(`^([1-5]?\d)(,([1-5]?\d))*$|^\*/[2-6]$|^\*/10$|^\*/12$|^\*/15$|^\*/20$|^\*/30$`)
 
 var cronWeekdayLiterals = strings.NewReplacer(
 	"SUN", "0",
@@ -76,12 +80,110 @@ const (
 	CronYear
 )
 
+type CronExpression int
+
+const (
+	CronEveryExpression CronExpression = iota
+	CronSimpleExpression
+	CronMultiExpression
+	CronRangeExpression
+	CronStepExpression
+)
+
+func NewCronSegment(expression string, position CronPosition) (CronSegment, error) {
+	var (
+		err error
+		s   CronSegment
+	)
+	s = CronSegment{
+		expression: expression,
+		position:   position,
+	}
+
+	err = s.init()
+	return s, err
+}
+
 type CronSegment struct {
-	expression string
-	position   CronPosition
+	expression     string
+	position       CronPosition
+	expressionType CronExpression
+}
+
+func (c CronSegment) init() error {
+	var (
+		err error
+	)
+
+	err = c.setExpressionType()
+
+	return err
+}
+
+func (c CronSegment) setExpressionType() error {
+	if strings.Contains(c.expression, "*") {
+		c.expressionType = CronEveryExpression
+		return nil
+	}
+
+	if strings.Contains(c.expression, ",") {
+		c.expressionType = CronMultiExpression
+		return nil
+	}
+
+	if strings.Contains(c.expression, "-") {
+		c.expressionType = CronRangeExpression
+		return nil
+	}
+
+	if strings.Contains(c.expression, "/") {
+		c.expressionType = CronStepExpression
+		return nil
+	}
+
+	_, err := strconv.Atoi(c.expression)
+	if err != nil {
+		return err
+	}
+
+	c.expressionType = CronSimpleExpression
+	return nil
 }
 
 func (c CronSegment) IsDue(t time.Time) bool {
+	switch c.position {
+	case CronSecond:
+		return true
+	case CronMinute:
+		return c.minuteDue(t)
+	case CronHour:
+		return true
+	case CronDay:
+		return true
+	case CronMonth:
+		return true
+	case CronWeekday:
+		return true
+	case CronYear:
+		return true
+	default:
+		return false
+	}
+}
+
+func (c CronSegment) minuteDue(t time.Time) bool {
+	var (
+		err   error
+		value int
+	)
+	minute := t.Minute()
+	value, err = strconv.Atoi(c.expression)
+	if err != nil {
+		value = 0
+	}
+	if minute == value {
+		return true
+	}
 	return true
 }
 
@@ -157,10 +259,12 @@ func (c Cron) parse() error {
 	}
 
 	for position, expression := range segments {
-		c.segments[position] = CronSegment{
-			expression: expression,
-			position:   CronPosition(position),
+		var s CronSegment
+		s, err = NewCronSegment(expression, CronPosition(position))
+		if err != nil {
+			break
 		}
+		c.segments[position] = s
 	}
-	return nil
+	return err
 }

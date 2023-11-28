@@ -75,10 +75,11 @@ func TestNewScheduler4(t *testing.T) {
 	r := NewMemoryRepository(ctx)
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
-			Uuid:   uuid.New(),
-			Name:   strconv.Itoa(i),
-			Tasks:  nil,
-			Status: JobStatusSchedulable,
+			Uuid:    uuid.New(),
+			Name:    strconv.Itoa(i),
+			Enabled: true,
+			Tasks:   nil,
+			Status:  JobStatusSchedulable,
 		})
 	}
 	c := NewSchedulerConfig()
