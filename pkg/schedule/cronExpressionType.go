@@ -16,14 +16,12 @@
 
 package schedule
 
-import "testing"
+type CronExpressionType int
 
-// TODO TestJob_Activate
-func TestJob_Activate(t *testing.T) {
-
-}
-
-// TODO TestJob_IsSchedulable
-func TestJob_IsSchedulable(t *testing.T) {
-
-}
+const (
+	CronInvalidExpression CronExpressionType = iota
+	CronSimpleExpression
+	CronMultiExpression
+	CronRangeExpression
+	CronStepExpression
+)

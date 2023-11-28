@@ -18,12 +18,12 @@ package schedule
 
 import "testing"
 
-// TODO TestJob_Activate
-func TestJob_Activate(t *testing.T) {
+// TODO TestNewCron
+func TestNewCron(t *testing.T) {
 
 }
 
-// TODO TestJob_IsSchedulable
-func TestJob_IsSchedulable(t *testing.T) {
+// TODO TestCron_IsDue
+func TestCron_IsDue(t *testing.T) {
 
 }

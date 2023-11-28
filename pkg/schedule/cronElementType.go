@@ -16,14 +16,18 @@
 
 package schedule
 
-import "testing"
+type CronElementType int
 
-// TODO TestJob_Activate
-func TestJob_Activate(t *testing.T) {
-
+func (c CronElementType) String() string {
+	return [...]string{"second", "minute", "hour", "day", "month", "weekday", "year"}[c]
 }
 
-// TODO TestJob_IsSchedulable
-func TestJob_IsSchedulable(t *testing.T) {
-
-}
+const (
+	CronSecond CronElementType = iota
+	CronMinute
+	CronHour
+	CronDay
+	CronMonth
+	CronWeekday
+	CronYear
+)
