@@ -19,11 +19,11 @@ package cron
 import "testing"
 
 // TODO TestNewCronElement
-func TestNewCronElement(t *testing.T) {
+func TestNewElement(t *testing.T) {
 
 }
 
 // TODO TestCronElement_IsDue
-func TestCronElement_IsDue(t *testing.T) {
+func TestElement_IsDue(t *testing.T) {
 
 }

@@ -18,7 +18,7 @@ package cron
 
 import "testing"
 
-func TestCronElementType_String(t *testing.T) {
+func TestElementType_String(t *testing.T) {
 	var (
 		result []string
 		wanted = []string{"second", "minute", "hour", "day", "month", "weekday", "year"}

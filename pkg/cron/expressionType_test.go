@@ -16,16 +16,21 @@
 
 package cron
 
-type ExpressionType int
+import "testing"
 
-func (e ExpressionType) String() string {
-	return [...]string{"invalid", "simple", "multi", "range", "step"}[e]
+func TestExpressionType_String(t *testing.T) {
+	var (
+		result []string
+		wanted = []string{"invalid", "simple", "multi", "range", "step"}
+	)
+
+	for i := 0; i < len(wanted); i++ {
+		result = append(result, ExpressionType(i).String())
+	}
+
+	for j := 0; j < len(wanted); j++ {
+		if result[j] != wanted[j] {
+			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
+		}
+	}
 }
-
-const (
-	CronInvalidExpression ExpressionType = iota
-	CronSimpleExpression
-	CronMultiExpression
-	CronRangeExpression
-	CronStepExpression
-)
