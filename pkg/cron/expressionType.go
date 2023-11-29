@@ -14,25 +14,14 @@
  *    limitations under the License.
  */
 
-package schedule
+package cron
 
-import (
-	"github.com/google/uuid"
+type ExpressionType int
+
+const (
+	CronInvalidExpression ExpressionType = iota
+	CronSimpleExpression
+	CronMultiExpression
+	CronRangeExpression
+	CronStepExpression
 )
-
-type Repository interface {
-	RepositoryReader
-	RepositoryWriter
-}
-
-type RepositoryReader interface {
-	All() []Job
-	Schedulable(limit int) []Job
-}
-
-type RepositoryWriter interface {
-	Activate(uuid uuid.UUID)
-	Add(job Job)
-	Update(job Job)
-	Delete(uuid uuid.UUID)
-}

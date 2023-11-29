@@ -14,14 +14,23 @@
  *    limitations under the License.
  */
 
-package schedule
+package cron
 
-type CronExpressionType int
+import "testing"
 
-const (
-	CronInvalidExpression CronExpressionType = iota
-	CronSimpleExpression
-	CronMultiExpression
-	CronRangeExpression
-	CronStepExpression
-)
+func TestCronElementType_String(t *testing.T) {
+	var (
+		result []string
+		wanted = []string{"second", "minute", "hour", "day", "month", "weekday", "year"}
+	)
+
+	for i := 0; i < len(wanted); i++ {
+		result = append(result, ElementType(i).String())
+	}
+
+	for j := 0; j < len(wanted); j++ {
+		if result[j] != wanted[j] {
+			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
+		}
+	}
+}

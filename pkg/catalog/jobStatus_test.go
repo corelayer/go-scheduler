@@ -14,19 +14,18 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
 import "testing"
 
-// TODO TestCronElementType_String
-func TestCronElementType_String(t *testing.T) {
+func TestJobStatus_String(t *testing.T) {
 	var (
 		result []string
-		wanted = []string{"second", "minute", "hour", "day", "month", "weekday", "year"}
+		wanted = []string{"none", "schedulable", "scheduled", "pending", "started", "inprogress", "ready", "completed"}
 	)
 
 	for i := 0; i < len(wanted); i++ {
-		result = append(result, CronElementType(i).String())
+		result = append(result, JobStatus(i).String())
 	}
 
 	for j := 0; j < len(wanted); j++ {

@@ -14,20 +14,33 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
-type CronElementType int
+import (
+	"github.com/google/uuid"
 
-func (c CronElementType) String() string {
-	return [...]string{"second", "minute", "hour", "day", "month", "weekday", "year"}[c]
+	"github.com/corelayer/go-scheduler/pkg/cron"
+)
+
+type Job struct {
+	Uuid     uuid.UUID
+	Enabled  bool
+	Status   JobStatus
+	Schedule cron.Schedule
+	Name     string
+	Tasks    []TaskRunner
 }
 
-const (
-	CronSecond CronElementType = iota
-	CronMinute
-	CronHour
-	CronDay
-	CronMonth
-	CronWeekday
-	CronYear
-)
+func (j *Job) Activate() bool {
+	return true
+}
+
+func (j *Job) IsSchedulable() bool {
+	if !j.Enabled {
+		return false
+	}
+	if j.Status == JobStatusSchedulable {
+		return true
+	}
+	return false
+}

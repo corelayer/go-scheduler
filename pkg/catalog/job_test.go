@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
 import "testing"
 
@@ -23,7 +23,34 @@ func TestJob_Activate(t *testing.T) {
 
 }
 
-// TODO TestJob_IsSchedulable
-func TestJob_IsSchedulable(t *testing.T) {
+func TestJob_IsSchedulable1(t *testing.T) {
+	j := Job{
+		Enabled: false,
+	}
 
+	if j.IsSchedulable() {
+		t.Errorf("job is schedulable, expected %s", JobStatusNone)
+	}
+}
+
+func TestJob_IsSchedulable2(t *testing.T) {
+	j := Job{
+		Enabled: true,
+		Status:  JobStatusCompleted,
+	}
+
+	if j.IsSchedulable() {
+		t.Errorf("job is schedulable, expected %s", JobStatusCompleted)
+	}
+}
+
+func TestJob_IsSchedulable3(t *testing.T) {
+	j := Job{
+		Enabled: true,
+		Status:  JobStatusSchedulable,
+	}
+
+	if !j.IsSchedulable() {
+		t.Errorf("job is not schedulable, expected %s", JobStatusSchedulable)
+	}
 }

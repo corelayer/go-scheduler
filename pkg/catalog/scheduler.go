@@ -14,46 +14,14 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
 import (
 	"context"
-	"strconv"
 	"time"
 )
 
-func NewSchedulerConfig() SchedulerConfig {
-	return SchedulerConfig{
-		StartDelaySeconds:             0,
-		ScheduleDelaySeconds:          1,
-		NoSchedulableJobsDelaySeconds: 5,
-		MaxSchedulableJobs:            10,
-	}
-}
-
-type SchedulerConfig struct {
-	StartDelaySeconds             int
-	ScheduleDelaySeconds          int
-	NoSchedulableJobsDelaySeconds int
-	MaxSchedulableJobs            int
-}
-
-func (c *SchedulerConfig) GetStartDelay() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.StartDelaySeconds))
-	return d
-}
-
-func (c *SchedulerConfig) GetScheduleDelay() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelaySeconds))
-	return d
-}
-
-func (c *SchedulerConfig) GetNoJobsSchedulableDelay() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.NoSchedulableJobsDelaySeconds))
-	return d
-}
-
-func NewScheduler(ctx context.Context, c SchedulerConfig, r Repository) *Scheduler {
+func NewScheduler(ctx context.Context, c SchedulerConfig, r ReadWriter) *Scheduler {
 	s := &Scheduler{
 		config: c,
 		jobs:   r,
@@ -66,7 +34,7 @@ func NewScheduler(ctx context.Context, c SchedulerConfig, r Repository) *Schedul
 
 type Scheduler struct {
 	config SchedulerConfig
-	jobs   Repository
+	jobs   ReadWriter
 	queue  *JobQueue
 }
 

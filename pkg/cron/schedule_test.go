@@ -14,47 +14,16 @@
  *    limitations under the License.
  */
 
-package schedule
+package cron
 
-import "github.com/google/uuid"
+import "testing"
 
-type Job struct {
-	Uuid    uuid.UUID
-	Enabled bool
-	Status  JobStatus
-	Cron    string `validate:"cron"`
-	Name    string
-	Tasks   []Task
+// TODO TestNewCron
+func TestNewSchedule(t *testing.T) {
+
 }
 
-func (j *Job) Activate() bool {
-	return true
+// TODO TestCron_IsDue
+func TestSchedule_IsDue(t *testing.T) {
+
 }
-
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
-	}
-	if j.Status == JobStatusSchedulable {
-		return true
-	}
-	return false
-}
-
-type Task interface {
-	Execute()
-	Notify(n chan JobStatus)
-}
-
-type JobStatus int
-
-const (
-	JobStatusNone JobStatus = iota
-	JobStatusSchedulable
-	JobStatusScheduled
-	JobStatusPending
-	JobStatusStarted
-	JobStatusInProgress
-	JobStatusReady
-	JobStatusCompleted
-)

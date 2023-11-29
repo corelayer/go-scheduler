@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 
 func TestNewRepository(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	r.mux.Lock()
 	result := len(r.jobs)
@@ -42,42 +42,42 @@ func TestNewRepository(t *testing.T) {
 
 func TestNewRepository2(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	NewMemoryRepository(ctx)
+	NewMemoryCatalog(ctx)
 
 	cancel()
 }
 
 func TestNewRepository3(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	close(r.chInput)
 }
 
 func TestNewRepository4(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	close(r.chDelete)
 }
 
 func TestNewRepository5(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	close(r.chUpdate)
 }
 
 func TestNewRepository6(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	close(r.chActivate)
 }
 
 func TestRepository_Add(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	r.Add(Job{
 		Uuid:   uuid.New(),
@@ -89,7 +89,7 @@ func TestRepository_Add(t *testing.T) {
 
 func TestRepository_Delete(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	uuids := make([]uuid.UUID, 10)
 
@@ -109,7 +109,7 @@ func TestRepository_Delete(t *testing.T) {
 
 func TestMemoryRepository_Schedulable(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
@@ -130,7 +130,7 @@ func TestMemoryRepository_Schedulable(t *testing.T) {
 
 func TestMemoryRepository_Schedulable2(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
@@ -152,7 +152,7 @@ func TestMemoryRepository_Schedulable2(t *testing.T) {
 
 func TestRepository_Update(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	id := uuid.New()
 	r.jobs[id] = Job{
@@ -181,7 +181,7 @@ func TestRepository_Update(t *testing.T) {
 
 func TestRepository_Update2(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	uuid1 := uuid.New()
 	r.jobs[uuid1] = Job{
@@ -210,7 +210,7 @@ func TestRepository_Update2(t *testing.T) {
 
 func TestMemoryRepository_deleteJob(t *testing.T) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	uuids := make([]uuid.UUID, 10)
 	jobs := make(map[uuid.UUID]Job)
@@ -247,7 +247,7 @@ func TestMemoryRepository_deleteJob(t *testing.T) {
 
 func BenchmarkRepository_Add(b *testing.B) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -262,7 +262,7 @@ func BenchmarkRepository_Add(b *testing.B) {
 
 func BenchmarkRepository_Update(b *testing.B) {
 	ctx := context.Background()
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	id := uuid.New()
 	r.addJob(Job{

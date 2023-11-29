@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 func TestNewScheduler(t *testing.T) {
 	ctx := context.Background()
 	c := SchedulerConfig{StartDelaySeconds: 5}
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
@@ -50,7 +50,7 @@ func TestNewScheduler(t *testing.T) {
 func TestNewScheduler2(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := SchedulerConfig{StartDelaySeconds: 5}
-	NewScheduler(ctx, c, NewMemoryRepository(ctx))
+	NewScheduler(ctx, c, NewMemoryCatalog(ctx))
 
 	cancel()
 }
@@ -58,7 +58,7 @@ func TestNewScheduler2(t *testing.T) {
 func TestNewScheduler3(t *testing.T) {
 	ctx := context.Background()
 	c := NewSchedulerConfig()
-	s := NewScheduler(ctx, c, NewMemoryRepository(ctx))
+	s := NewScheduler(ctx, c, NewMemoryCatalog(ctx))
 
 	jobs := s.jobs.Schedulable(c.MaxSchedulableJobs)
 
@@ -72,7 +72,7 @@ func TestNewScheduler3(t *testing.T) {
 func TestNewScheduler4(t *testing.T) {
 	ctx := context.Background()
 
-	r := NewMemoryRepository(ctx)
+	r := NewMemoryCatalog(ctx)
 	for i := 0; i < 10; i++ {
 		r.addJob(Job{
 			Uuid:    uuid.New(),
@@ -116,7 +116,7 @@ func TestNewScheduler4(t *testing.T) {
 // 	for i := 0; i < 20; i++ {
 // 		s.Add(&Job{
 // 			Name:  "test",
-// 			Tasks: []Task{TaskMock{}},
+// 			Tasks: []TaskRunner{TaskMock{}},
 // 		})
 // 	}
 // }
@@ -128,7 +128,7 @@ func TestNewScheduler4(t *testing.T) {
 // 	for i := 0; i < b.N; i++ {
 // 		s.Add(&Job{
 // 			Name:  "test",
-// 			Tasks: []Task{TaskMock{}},
+// 			Tasks: []TaskRunner{TaskMock{}},
 // 		})
 // 	}
 //

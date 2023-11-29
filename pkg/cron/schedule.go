@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package schedule
+package cron
 
 import (
 	"fmt"
@@ -64,47 +64,47 @@ var cronTemplates = map[string]string{
 	"@everysecond": "* * * * * *",
 }
 
-func NewCron(s string) (Cron, error) {
-	c := Cron{
-		expression: s,
-		elements:   make([]CronElement, 6),
+func NewSchedule(expression string) (Schedule, error) {
+	s := Schedule{
+		expression: expression,
+		elements:   make([]Element, 6),
 	}
-	c.replaceCronTemplates()
-	c.normalize()
-	err := c.parse()
+	s.replaceCronTemplates()
+	s.normalize()
+	err := s.parse()
 	if err != nil {
-		return Cron{}, err
+		return Schedule{}, err
 	}
-	return c, nil
+	return s, nil
 }
 
-type Cron struct {
+type Schedule struct {
 	expression string
-	elements   []CronElement
+	elements   []Element
 }
 
-func (c Cron) replaceCronTemplates() {
+func (s Schedule) replaceCronTemplates() {
 	// Replace template expression with a valid cron expression
-	if t, ok := cronTemplates[c.expression]; ok {
-		c.expression = t
+	if t, ok := cronTemplates[s.expression]; ok {
+		s.expression = t
 	}
 }
 
-func (c Cron) normalize() {
+func (s Schedule) normalize() {
 	// Replace all spaces with a single space
-	c.expression = reSpace.ReplaceAllString(c.expression, " ")
+	s.expression = reSpace.ReplaceAllString(s.expression, " ")
 
 	// Transform string to uppercase before replacing characters to numbers
-	c.expression = strings.ToUpper(c.expression)
+	s.expression = strings.ToUpper(s.expression)
 
 	// Replace weekday literals to numbers
-	c.expression = cronWeekdayLiterals.Replace(c.expression)
+	s.expression = cronWeekdayLiterals.Replace(s.expression)
 	// Replace month literals to numbers
-	c.expression = cronMonthLiterals.Replace(c.expression)
+	s.expression = cronMonthLiterals.Replace(s.expression)
 }
 
-func (c Cron) standardize() ([]string, error) {
-	segments := strings.Split(c.expression, " ")
+func (s Schedule) standardize() ([]string, error) {
+	segments := strings.Split(s.expression, " ")
 	count := len(segments)
 
 	// Expect at least 5 elements: minute, hour, day, month, weekday
@@ -120,35 +120,35 @@ func (c Cron) standardize() ([]string, error) {
 	return segments, nil
 }
 
-func (c Cron) parse() error {
+func (s Schedule) parse() error {
 	var (
 		elements []string
 		err      error
 	)
 
-	elements, err = c.standardize()
+	elements, err = s.standardize()
 	if err != nil {
 		return err
 	}
 
 	if len(elements) == 7 {
-		c.elements = make([]CronElement, 7)
+		s.elements = make([]Element, 7)
 	}
 
 	for elementType, expression := range elements {
-		var s CronElement
-		s, err = NewCronElement(expression, CronElementType(elementType))
+		var e Element
+		e, err = NewElement(expression, ElementType(elementType))
 		if err != nil {
 			break
 		}
-		c.elements[elementType] = s
+		s.elements[elementType] = e
 	}
 	return err
 }
 
-func (c Cron) IsDue(t time.Time) bool {
+func (s Schedule) IsDue(t time.Time) bool {
 	var o bool
-	for _, e := range c.elements {
+	for _, e := range s.elements {
 		if o = e.IsDue(t); !o {
 			return o
 		}

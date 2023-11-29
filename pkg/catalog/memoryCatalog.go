@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
 import (
 	"context"
@@ -23,8 +23,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func NewMemoryRepository(ctx context.Context) *MemoryRepository {
-	r := MemoryRepository{
+func NewMemoryCatalog(ctx context.Context) *MemoryCatalog {
+	r := MemoryCatalog{
 		jobs:       make(map[uuid.UUID]Job, 0),
 		chInput:    make(chan Job),
 		chDelete:   make(chan uuid.UUID),
@@ -36,7 +36,7 @@ func NewMemoryRepository(ctx context.Context) *MemoryRepository {
 	return &r
 }
 
-type MemoryRepository struct {
+type MemoryCatalog struct {
 	jobs       map[uuid.UUID]Job
 	chInput    chan Job
 	chDelete   chan uuid.UUID
@@ -45,29 +45,29 @@ type MemoryRepository struct {
 	mux        sync.Mutex
 }
 
-func (r *MemoryRepository) Activate(uuid uuid.UUID) {
-	r.chActivate <- uuid
+func (c *MemoryCatalog) Activate(uuid uuid.UUID) {
+	c.chActivate <- uuid
 }
 
-func (r *MemoryRepository) Add(job Job) {
-	r.chInput <- job
+func (c *MemoryCatalog) Add(job Job) {
+	c.chInput <- job
 }
 
-func (r *MemoryRepository) All() []Job {
-	r.mux.Lock()
-	defer r.mux.Unlock()
+func (c *MemoryCatalog) All() []Job {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	var jobs = make([]Job, 0)
-	for _, job := range r.jobs {
+	for _, job := range c.jobs {
 		jobs = append(jobs, job)
 	}
 	return jobs
 }
 
-func (r *MemoryRepository) Delete(uuid uuid.UUID) {
-	r.chDelete <- uuid
+func (c *MemoryCatalog) Delete(uuid uuid.UUID) {
+	c.chDelete <- uuid
 }
 
-// func (r *MemoryRepository) Exists(uuid uuid.UUID) bool {
+// func (r *MemoryCatalog) Exists(uuid uuid.UUID) bool {
 // 	r.mux.Lock()
 // 	defer r.mux.Unlock()
 //
@@ -77,13 +77,13 @@ func (r *MemoryRepository) Delete(uuid uuid.UUID) {
 // 	return false
 // }
 
-func (r *MemoryRepository) Schedulable(limit int) []Job {
+func (c *MemoryCatalog) Schedulable(limit int) []Job {
 	var output = make([]Job, 0)
 
-	r.mux.Lock()
-	defer r.mux.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
-	for _, job := range r.jobs {
+	for _, job := range c.jobs {
 		if job.IsSchedulable() {
 			output = append(output, job)
 		}
@@ -95,62 +95,62 @@ func (r *MemoryRepository) Schedulable(limit int) []Job {
 	return output
 }
 
-func (r *MemoryRepository) Update(job Job) {
-	r.chUpdate <- job
+func (c *MemoryCatalog) Update(job Job) {
+	c.chUpdate <- job
 }
 
-func (r *MemoryRepository) activateJob(uuid uuid.UUID) {
-	r.mux.Lock()
-	defer r.mux.Unlock()
+func (c *MemoryCatalog) activateJob(uuid uuid.UUID) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
-	job := r.jobs[uuid]
+	job := c.jobs[uuid]
 	job.Status = JobStatusSchedulable
-	r.chUpdate <- job
+	c.chUpdate <- job
 }
 
-func (r *MemoryRepository) addJob(job Job) {
-	r.mux.Lock()
-	defer r.mux.Unlock()
+func (c *MemoryCatalog) addJob(job Job) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
-	r.jobs[job.Uuid] = job
+	c.jobs[job.Uuid] = job
 }
 
-func (r *MemoryRepository) deleteJob(uuid uuid.UUID) {
-	r.mux.Lock()
-	defer r.mux.Unlock()
+func (c *MemoryCatalog) deleteJob(uuid uuid.UUID) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
-	delete(r.jobs, uuid)
+	delete(c.jobs, uuid)
 }
 
-func (r *MemoryRepository) updateJob(job Job) {
-	r.mux.Lock()
-	defer r.mux.Unlock()
-	r.jobs[job.Uuid] = job
+func (c *MemoryCatalog) updateJob(job Job) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.jobs[job.Uuid] = job
 }
 
-func (r *MemoryRepository) handleOperations(ctx context.Context) {
+func (c *MemoryCatalog) handleOperations(ctx context.Context) {
 	for {
 		select {
-		case job, ok := <-r.chInput:
+		case job, ok := <-c.chInput:
 			if !ok {
 				return
 			}
-			r.addJob(job)
-		case jobId, ok := <-r.chDelete:
+			c.addJob(job)
+		case jobId, ok := <-c.chDelete:
 			if !ok {
 				return
 			}
-			r.deleteJob(jobId)
-		case job, ok := <-r.chUpdate:
+			c.deleteJob(jobId)
+		case job, ok := <-c.chUpdate:
 			if !ok {
 				return
 			}
-			r.updateJob(job)
-		case jobId, ok := <-r.chActivate:
+			c.updateJob(job)
+		case jobId, ok := <-c.chActivate:
 			if !ok {
 				return
 			}
-			r.activateJob(jobId)
+			c.activateJob(jobId)
 		case <-ctx.Done():
 			return
 		}

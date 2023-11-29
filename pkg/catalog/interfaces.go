@@ -14,16 +14,30 @@
  *    limitations under the License.
  */
 
-package schedule
+package catalog
 
-import "testing"
+import (
+	"github.com/google/uuid"
+)
 
-// TODO TestNewCron
-func TestNewCron(t *testing.T) {
-
+type ReadWriter interface {
+	Reader
+	Writer
 }
 
-// TODO TestCron_IsDue
-func TestCron_IsDue(t *testing.T) {
+type Reader interface {
+	All() []Job
+	Schedulable(limit int) []Job
+}
 
+type Writer interface {
+	Activate(uuid uuid.UUID)
+	Add(job Job)
+	Update(job Job)
+	Delete(uuid uuid.UUID)
+}
+
+type TaskRunner interface {
+	Execute()
+	Notify(n chan JobStatus)
 }
