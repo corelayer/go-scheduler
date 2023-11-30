@@ -16,18 +16,16 @@
 
 package cron
 
-type ElementType int
+type qualification int
 
-func (e ElementType) String() string {
-	return [...]string{"second", "minute", "hour", "day", "month", "weekday", "year"}[e]
+func (q qualification) String() string {
+	return [...]string{"invalid", "simple", "multi", "range", "step"}[q]
 }
 
 const (
-	CronSecond ElementType = iota
-	CronMinute
-	CronHour
-	CronDay
-	CronMonth
-	CronWeekday
-	CronYear
+	qualificationNone qualification = iota
+	qualificationSimple
+	qualificationMulti
+	qualificationRange
+	qualificationStep
 )

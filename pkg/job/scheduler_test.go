@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func TestNewScheduler(t *testing.T) {
 			Uuid:   uuid.New(),
 			Name:   strconv.Itoa(i),
 			Tasks:  nil,
-			Status: JobStatusNone,
+			Status: StatusNone,
 		})
 	}
 	s := NewScheduler(ctx, c, r)
@@ -79,7 +79,7 @@ func TestNewScheduler4(t *testing.T) {
 			Name:    strconv.Itoa(i),
 			Enabled: true,
 			Tasks:   nil,
-			Status:  JobStatusSchedulable,
+			Status:  StatusSchedulable,
 		})
 	}
 	c := NewSchedulerConfig()
@@ -139,6 +139,6 @@ type TaskMock struct{}
 func (m TaskMock) Execute() {
 	return
 }
-func (m TaskMock) Notify(n chan JobStatus) {
+func (m TaskMock) Notify(n chan Status) {
 	return
 }

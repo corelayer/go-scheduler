@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"testing"

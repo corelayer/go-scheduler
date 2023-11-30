@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"context"
@@ -22,54 +22,54 @@ import (
 	"sync"
 )
 
-func NewJobQueue(ctx context.Context) *JobQueue {
-	s := &JobQueue{
+func newQueue(ctx context.Context) *queue {
+	s := &queue{
 		jobs: make([]Job, 0),
 		chIn: make(chan Job, 10),
 	}
-	go s.handleJobInput(ctx)
+	go s.handleInput(ctx)
 	return s
 }
 
-type JobQueue struct {
+type queue struct {
 	jobs []Job
 	chIn chan Job
 
 	mux sync.Mutex
 }
 
-func (s *JobQueue) Length() int {
-	return len(s.jobs)
+func (q *queue) Length() int {
+	return len(q.jobs)
 }
-func (s *JobQueue) Capacity() int {
-	return cap(s.jobs)
-}
-
-func (s *JobQueue) Add(job Job) {
-	s.chIn <- job
+func (q *queue) Capacity() int {
+	return cap(q.jobs)
 }
 
-func (s *JobQueue) Get() (Job, error) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	if len(s.jobs) > 0 {
-		job := s.jobs[0]
-		s.jobs = s.jobs[1:]
+func (q *queue) Add(job Job) {
+	q.chIn <- job
+}
+
+func (q *queue) Get() (Job, error) {
+	q.mux.Lock()
+	defer q.mux.Unlock()
+	if len(q.jobs) > 0 {
+		job := q.jobs[0]
+		q.jobs = q.jobs[1:]
 		return job, nil
 	}
 	return Job{}, fmt.Errorf("no jobs available")
 }
 
-func (s *JobQueue) handleJobInput(ctx context.Context) {
+func (q *queue) handleInput(ctx context.Context) {
 	for {
 		select {
-		case job, ok := <-s.chIn:
+		case job, ok := <-q.chIn:
 			if !ok {
 				return
 			}
-			s.mux.Lock()
-			s.jobs = append(s.jobs, job)
-			s.mux.Unlock()
+			q.mux.Lock()
+			q.jobs = append(q.jobs, job)
+			q.mux.Unlock()
 		case <-ctx.Done():
 			return
 		}

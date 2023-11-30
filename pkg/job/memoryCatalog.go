@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"context"
@@ -104,7 +104,7 @@ func (c *MemoryCatalog) activateJob(uuid uuid.UUID) {
 	defer c.mux.Unlock()
 
 	job := c.jobs[uuid]
-	job.Status = JobStatusSchedulable
+	job.Status = StatusSchedulable
 	c.chUpdate <- job
 }
 

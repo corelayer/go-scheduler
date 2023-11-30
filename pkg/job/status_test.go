@@ -14,18 +14,18 @@
  *    limitations under the License.
  */
 
-package cron
+package job
 
 import "testing"
 
-func TestElementType_String(t *testing.T) {
+func TestJobStatus_String(t *testing.T) {
 	var (
 		result []string
-		wanted = []string{"second", "minute", "hour", "day", "month", "weekday", "year"}
+		wanted = []string{"none", "schedulable", "scheduled", "pending", "started", "in progress", "ready", "completed"}
 	)
 
 	for i := 0; i < len(wanted); i++ {
-		result = append(result, ElementType(i).String())
+		result = append(result, Status(i).String())
 	}
 
 	for j := 0; j < len(wanted); j++ {

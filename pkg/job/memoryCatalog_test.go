@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestNewRepository(t *testing.T) {
+func TestNewMemoryCatalog(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -40,28 +40,28 @@ func TestNewRepository(t *testing.T) {
 	}
 }
 
-func TestNewRepository2(t *testing.T) {
+func TestNewMemoryCatalog2(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	NewMemoryCatalog(ctx)
 
 	cancel()
 }
 
-func TestNewRepository3(t *testing.T) {
+func TestNewMemoryCatalog3(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
 	close(r.chInput)
 }
 
-func TestNewRepository4(t *testing.T) {
+func TestNewMemoryCatalog4(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
 	close(r.chDelete)
 }
 
-func TestNewRepository5(t *testing.T) {
+func TestNewMemoryCatalog5(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -75,7 +75,7 @@ func TestNewRepository6(t *testing.T) {
 	close(r.chActivate)
 }
 
-func TestRepository_Add(t *testing.T) {
+func TestMemoryCatalog_Add(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -83,11 +83,11 @@ func TestRepository_Add(t *testing.T) {
 		Uuid:   uuid.New(),
 		Name:   "test",
 		Tasks:  nil,
-		Status: JobStatusNone,
+		Status: StatusNone,
 	})
 }
 
-func TestRepository_Delete(t *testing.T) {
+func TestMemoryCatalog_Delete(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -107,7 +107,7 @@ func TestRepository_Delete(t *testing.T) {
 	r.Delete(uuids[d])
 }
 
-func TestMemoryRepository_Schedulable(t *testing.T) {
+func TestMemoryCatalog_Schedulable(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -116,7 +116,7 @@ func TestMemoryRepository_Schedulable(t *testing.T) {
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Tasks:   nil,
-			Status:  JobStatusSchedulable,
+			Status:  StatusSchedulable,
 			Enabled: true,
 		})
 	}
@@ -128,7 +128,7 @@ func TestMemoryRepository_Schedulable(t *testing.T) {
 	}
 }
 
-func TestMemoryRepository_Schedulable2(t *testing.T) {
+func TestMemoryCatalog_Schedulable2(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -137,7 +137,7 @@ func TestMemoryRepository_Schedulable2(t *testing.T) {
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Tasks:   nil,
-			Status:  JobStatusSchedulable,
+			Status:  StatusSchedulable,
 			Enabled: true,
 		})
 	}
@@ -150,7 +150,7 @@ func TestMemoryRepository_Schedulable2(t *testing.T) {
 	}
 }
 
-func TestRepository_Update(t *testing.T) {
+func TestMemoryCatalog_Update(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -159,14 +159,14 @@ func TestRepository_Update(t *testing.T) {
 		Uuid:   id,
 		Name:   "test1",
 		Tasks:  nil,
-		Status: JobStatusNone,
+		Status: StatusNone,
 	}
 
 	r.Update(Job{
 		Uuid:   id,
 		Name:   "testUpdated",
 		Tasks:  nil,
-		Status: JobStatusCompleted,
+		Status: StatusCompleted,
 	})
 
 	r.mux.Lock()
@@ -179,7 +179,7 @@ func TestRepository_Update(t *testing.T) {
 	}
 }
 
-func TestRepository_Update2(t *testing.T) {
+func TestMemoryCatalog_Update2(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -188,14 +188,14 @@ func TestRepository_Update2(t *testing.T) {
 		Uuid:   uuid1,
 		Name:   "test1",
 		Tasks:  nil,
-		Status: JobStatusNone,
+		Status: StatusNone,
 	}
 
 	r.updateJob(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
 		Tasks:  nil,
-		Status: JobStatusCompleted,
+		Status: StatusCompleted,
 	})
 
 	r.mux.Lock()
@@ -208,7 +208,7 @@ func TestRepository_Update2(t *testing.T) {
 	}
 }
 
-func TestMemoryRepository_deleteJob(t *testing.T) {
+func TestMemoryCatalog_deleteJob(t *testing.T) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -245,7 +245,7 @@ func TestMemoryRepository_deleteJob(t *testing.T) {
 	}
 }
 
-func BenchmarkRepository_Add(b *testing.B) {
+func BenchmarkMemoryCatalog_Add(b *testing.B) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -255,12 +255,12 @@ func BenchmarkRepository_Add(b *testing.B) {
 			Uuid:   uuid.New(),
 			Name:   "testJob",
 			Tasks:  nil,
-			Status: JobStatusNone,
+			Status: StatusNone,
 		})
 	}
 }
 
-func BenchmarkRepository_Update(b *testing.B) {
+func BenchmarkMemoryCatalog_Update(b *testing.B) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
 
@@ -269,7 +269,7 @@ func BenchmarkRepository_Update(b *testing.B) {
 		Uuid:   id,
 		Name:   "testJob",
 		Tasks:  nil,
-		Status: JobStatusNone,
+		Status: StatusNone,
 	})
 
 	b.ResetTimer()

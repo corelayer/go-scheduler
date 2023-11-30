@@ -14,37 +14,37 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"context"
 	"testing"
 )
 
-func TestJobQueue_Add(t *testing.T) {
+func TestQueue_Add(t *testing.T) {
 	ctx := context.Background()
-	jl := NewJobQueue(ctx)
+	jl := newQueue(ctx)
 
 	for i := 0; i < 20; i++ {
 		jl.Add(Job{Name: "test"})
 	}
 }
 
-func TestNewJobQueue(t *testing.T) {
+func TestNewQueue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	NewJobQueue(ctx)
+	newQueue(ctx)
 	cancel()
 }
 
-func TestNewJobQueue2(t *testing.T) {
+func TestNewQueue2(t *testing.T) {
 	ctx := context.Background()
-	jl := NewJobQueue(ctx)
+	jl := newQueue(ctx)
 	close(jl.chIn)
 }
 
-func TestJobQueue_Get(t *testing.T) {
+func TestQueue_Get(t *testing.T) {
 	ctx := context.Background()
-	jl := NewJobQueue(ctx)
+	jl := newQueue(ctx)
 	tests := make([]string, 10)
 
 	for i := 0; i < 10; i++ {
@@ -72,9 +72,9 @@ func TestJobQueue_Get(t *testing.T) {
 	}
 }
 
-func TestJobQueue_Length(t *testing.T) {
+func TestQueue_Length(t *testing.T) {
 	ctx := context.Background()
-	jl := NewJobQueue(ctx)
+	jl := newQueue(ctx)
 
 	result := jl.Length()
 	wanted := 0
@@ -84,9 +84,9 @@ func TestJobQueue_Length(t *testing.T) {
 	}
 }
 
-func TestJobQueue_Capacity(t *testing.T) {
+func TestQueue_Capacity(t *testing.T) {
 	ctx := context.Background()
-	jl := NewJobQueue(ctx)
+	jl := newQueue(ctx)
 
 	result := jl.Capacity()
 	wanted := 0
@@ -98,7 +98,7 @@ func TestJobQueue_Capacity(t *testing.T) {
 
 // func BenchmarkJobQueue_Add(b *testing.B) {
 // 	ctx := context.Background()
-// 	jl := NewJobQueue(ctx)
+// 	jl := newQueue(ctx)
 //
 // 	for i := 0; i < b.N; i++ {
 // 		jl.Add(Job{Name: "test"})

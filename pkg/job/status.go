@@ -14,23 +14,21 @@
  *    limitations under the License.
  */
 
-package cron
+package job
 
-import "testing"
+type Status int
 
-func TestExpressionType_String(t *testing.T) {
-	var (
-		result []string
-		wanted = []string{"invalid", "simple", "multi", "range", "step"}
-	)
-
-	for i := 0; i < len(wanted); i++ {
-		result = append(result, ExpressionType(i).String())
-	}
-
-	for j := 0; j < len(wanted); j++ {
-		if result[j] != wanted[j] {
-			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
-		}
-	}
+func (s Status) String() string {
+	return [...]string{"none", "schedulable", "scheduled", "pending", "started", "in progress", "ready", "completed"}[s]
 }
+
+const (
+	StatusNone Status = iota
+	StatusSchedulable
+	StatusScheduled
+	StatusPending
+	StatusStarted
+	StatusInProgress
+	StatusReady
+	StatusCompleted
+)

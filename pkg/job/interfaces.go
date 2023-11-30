@@ -14,21 +14,30 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
-type JobStatus int
+import (
+	"github.com/google/uuid"
+)
 
-func (s JobStatus) String() string {
-	return [...]string{"none", "schedulable", "scheduled", "pending", "started", "inprogress", "ready", "completed"}[s]
+type ReadWriter interface {
+	Reader
+	Writer
 }
 
-const (
-	JobStatusNone JobStatus = iota
-	JobStatusSchedulable
-	JobStatusScheduled
-	JobStatusPending
-	JobStatusStarted
-	JobStatusInProgress
-	JobStatusReady
-	JobStatusCompleted
-)
+type Reader interface {
+	All() []Job
+	Schedulable(limit int) []Job
+}
+
+type Writer interface {
+	Activate(uuid uuid.UUID)
+	Add(job Job)
+	Update(job Job)
+	Delete(uuid uuid.UUID)
+}
+
+type TaskRunner interface {
+	Execute()
+	Notify(n chan Status)
+}

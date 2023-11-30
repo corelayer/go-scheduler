@@ -14,23 +14,33 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
-import "testing"
+import (
+	"github.com/google/uuid"
 
-func TestJobStatus_String(t *testing.T) {
-	var (
-		result []string
-		wanted = []string{"none", "schedulable", "scheduled", "pending", "started", "inprogress", "ready", "completed"}
-	)
+	"github.com/corelayer/go-scheduler/pkg/cron"
+)
 
-	for i := 0; i < len(wanted); i++ {
-		result = append(result, JobStatus(i).String())
+type Job struct {
+	Uuid     uuid.UUID
+	Enabled  bool
+	Status   Status
+	Schedule cron.Schedule
+	Name     string
+	Tasks    []TaskRunner
+}
+
+func (j *Job) Activate() bool {
+	return true
+}
+
+func (j *Job) IsSchedulable() bool {
+	if !j.Enabled {
+		return false
 	}
-
-	for j := 0; j < len(wanted); j++ {
-		if result[j] != wanted[j] {
-			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
-		}
+	if j.Status == StatusSchedulable {
+		return true
 	}
+	return false
 }

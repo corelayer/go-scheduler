@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package catalog
+package job
 
 import (
 	"context"
@@ -25,7 +25,7 @@ func NewScheduler(ctx context.Context, c SchedulerConfig, r ReadWriter) *Schedul
 	s := &Scheduler{
 		config: c,
 		jobs:   r,
-		queue:  NewJobQueue(ctx),
+		queue:  newQueue(ctx),
 	}
 	go s.schedule(ctx)
 	go s.verifySchedule(ctx)
@@ -35,7 +35,7 @@ func NewScheduler(ctx context.Context, c SchedulerConfig, r ReadWriter) *Schedul
 type Scheduler struct {
 	config SchedulerConfig
 	jobs   ReadWriter
-	queue  *JobQueue
+	queue  *queue
 }
 
 func (s *Scheduler) schedule(ctx context.Context) {
@@ -48,7 +48,7 @@ func (s *Scheduler) schedule(ctx context.Context) {
 			jobs := s.jobs.Schedulable(s.config.MaxSchedulableJobs)
 			if jobs != nil {
 				for _, job := range jobs {
-					job.Status = JobStatusScheduled
+					job.Status = StatusScheduled
 					s.jobs.Update(job)
 					// s.queue.Add(job)
 				}

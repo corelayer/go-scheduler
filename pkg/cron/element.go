@@ -25,106 +25,114 @@ import (
 )
 
 var validSecondOrMinute = `(?:^(?:[1-5]?\d){1}$)|(?:^(?:[1-5]?\d)(?:,(?:[1-5]?\d))+$)|(?:^(?:[1-5]?\d)-(?:[1-5]?\d)$)|(?:^(?:\*/[2-6]|\*/10|\*/12|\*/15|\*/20|\*/30)$)`
-var validHour = `(?:^(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))$)|(?:^(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))(?:,(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1})))*$)|(?:^(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))-(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))$)|(?:^(?:\*/[2-4]|\*/6|\*/8|\*/12)$)`
+var validHour = `(?:^\*$^(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))$)|(?:^(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))(?:,(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1})))*$)|(?:^(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))-(?:(?:\d)|(?:1[0-9]{1})|(?:2[0-3]{1}))$)|(?:^(?:\*/[2-4]|\*/6|\*/8|\*/12)$)`
 var validDayOfWeek = `(?:^(?:(?:[0-6]{1}))$)|(?:^(?:(?:[0-6]{1}))(?:,(?:(?:[0-6]{1})))*$)|(?:^(?:(?:[0-6]{1}))-(?:(?:[0-6]{1}))$)`
 var validDayOfMonth = `(?:^(?:(?:[1-2]?[1-9]{1})|(?:3[0-1]{1}))$)|(?:^(?:(?:[1-2]?[1-9]{1})|(?:3[0-1]{1}))(?:,(?:(?:(?:[1-2]?[1-9]{1})|(?:3[0-1]{1}))))*$)|(?:^(?:(?:[1-2]?[1-9]{1})|(?:3[0-1]{1}))-(?:(?:[1-2]?[1-9]{1})|(?:3[0-1]{1}))$)`
-var validMonth = `(?:^(?:(?:\d)|(?:1[0-2]{1}))$)|(?:^(?:(?:\d)|(?:1[0-2]{1}))(?:,(?:(?:\d)|(?:1[0-2]{1})))*$)|(?:^(?:(?:\d)|(?:1[0-2]{1}))-(?:(?:\d)|(?:1[0-2]{1}))$)`
+var validMonth = `(?:^(?:(?:[1-9])|(?:1[0-2]{1}))$)|(?:^(?:(?:[1-9])|(?:1[0-2]{1}))(?:,(?:(?:[1-9])|(?:1[0-2]{1})))*$)|(?:^(?:(?:[1-9])|(?:1[0-2]{1}))-(?:(?:[1-9])|(?:1[0-2]{1}))$)`
+var validYear = `(?:^\d+$)|(?:^(?:\d+)(?:,(?:\d+)+)$)|(?:^\d+-\d+$)|(?:^\*\/\d+$)`
 
 var reSecondOrMinute = regexp.MustCompile(validSecondOrMinute)
 var reHour = regexp.MustCompile(validHour)
 var reMonth = regexp.MustCompile(validMonth)
 var reDayOfWeek = regexp.MustCompile(validDayOfWeek)
 var reDayOfMonth = regexp.MustCompile(validDayOfMonth)
+var reYear = regexp.MustCompile(validYear)
 
-func NewElement(expression string, position ElementType) (Element, error) {
-	var (
-		err error
-		s   Element
-	)
-	s = Element{
-		expression:  expression,
-		elementType: position,
+func newElement(expression string, position position) (element, error) {
+	e := element{
+		expression: expression,
+		p:          position,
+		q:          qualificationNone,
 	}
 
-	err = s.init()
-	return s, err
+	return e, e.validate()
 }
 
-type Element struct {
-	expression     string
-	elementType    ElementType
-	expressionType ExpressionType
+type element struct {
+	expression string
+	p          position
+	q          qualification
 }
 
-func (e Element) init() error {
-	var (
-		err error
-	)
+func (e *element) validate() error {
+	// First qualify the expression
+	e.qualify()
 
-	err = e.validate()
-
-	if err != nil {
-		e.expressionType = CronInvalidExpression
-		return err
+	// No additional validation needed for expression
+	if e.expression == "*" {
+		return nil
 	}
 
-	e.setExpressionType()
+	var s []string
+	switch e.p {
+	case positionSecond:
+		s = reSecondOrMinute.FindStringSubmatch(e.expression)
+	case positionMinute:
+		s = reSecondOrMinute.FindStringSubmatch(e.expression)
+	case positionHour:
+		s = reHour.FindStringSubmatch(e.expression)
+	case positionDay:
+		s = reDayOfMonth.FindStringSubmatch(e.expression)
+	case positionMonth:
+		s = reMonth.FindStringSubmatch(e.expression)
+	case positionWeekday:
+		s = reDayOfWeek.FindStringSubmatch(e.expression)
+	case positionYear:
+		s = reYear.FindStringSubmatch(e.expression)
+	}
+
+	if len(s) == 0 {
+		return fmt.Errorf("invalid expression in %s", e.p.String())
+	}
+
+	// No additional validation is necessary for simple expressions
+	if e.q == qualificationSimple {
+		return nil
+	}
+	// No need to check for errors, as the regex will only allow integers to match
+	p, _ := e.parseExpression()
+
+	// If there are multiple values, check if they are ascending
+	if len(p) > 1 {
+		for i := 0; i < len(p)-1; i++ {
+			if p[i] > p[i+1] {
+				return fmt.Errorf("invalid order of values in %s", e.p.String())
+			}
+		}
+	}
 	return nil
 }
 
-func (e Element) validate() error {
-	var s []string
-	switch e.elementType {
-	case CronSecond:
-		s = reSecondOrMinute.FindStringSubmatch(e.expression)
-	case CronMinute:
-		s = reSecondOrMinute.FindStringSubmatch(e.expression)
-	case CronHour:
-		s = reHour.FindStringSubmatch(e.expression)
-	case CronDay:
-		s = reDayOfMonth.FindStringSubmatch(e.expression)
-	case CronMonth:
-		s = reMonth.FindStringSubmatch(e.expression)
-	case CronWeekday:
-		s = reDayOfWeek.FindStringSubmatch(e.expression)
-	}
-
-	switch len(s) {
-	case 0:
-		return fmt.Errorf("invalid expression in %s", e.elementType.String())
-	case 1:
-		return nil
-	default:
-		return fmt.Errorf("invalid match count in %s", e.elementType.String())
-	}
-}
-
-func (e Element) setExpressionType() {
-	chars := []string{"*", ",", "-", "/"}
+func (e *element) qualify() {
+	chars := []string{",", "-", "/"}
 	if !strings.ContainsAny(e.expression, strings.Join(chars, "")) {
-		e.expressionType = CronSimpleExpression
+		e.q = qualificationSimple
 		return
 	}
 	for i, char := range chars {
 		if strings.Contains(e.expression, char) {
-			e.expressionType = ExpressionType(i + 1)
-			return
+			// qualification starts at 2 = qualificationSimple
+			e.q = qualification(i + 2)
 		}
 	}
 }
 
-func (e Element) splitExpression() ([]int, error) {
+func (e *element) parseExpression() ([]int, error) {
 	var (
 		s   []string
 		o   []int
 		err error
 	)
 
-	switch e.expressionType {
-	case CronSimpleExpression:
+	if e.expression == "*" {
+		return nil, nil
+	}
+
+	switch e.q {
+	case qualificationSimple:
 		o = make([]int, 1)
 		o[0], err = strconv.Atoi(e.expression)
-	case CronMultiExpression:
+	case qualificationMulti:
 		s = strings.Split(e.expression, ",")
 		o = make([]int, len(s))
 		for k, v := range s {
@@ -133,7 +141,7 @@ func (e Element) splitExpression() ([]int, error) {
 				break
 			}
 		}
-	case CronRangeExpression:
+	case qualificationRange:
 		s = strings.Split(e.expression, "-")
 		o = make([]int, 2)
 		for k, v := range s {
@@ -142,66 +150,76 @@ func (e Element) splitExpression() ([]int, error) {
 				break
 			}
 		}
-	case CronStepExpression:
+	case qualificationStep:
 		s = strings.Split(e.expression, "*/")
 		o = make([]int, 1)
 		o[0], err = strconv.Atoi(s[1])
+	default:
+		err = fmt.Errorf("invalid qualification to parse")
 	}
 
 	return o, err
 }
 
-func (e Element) IsDue(t time.Time) bool {
-	switch e.elementType {
-	case CronSecond:
-		return e.isExpressionDue(t.Second())
-	case CronMinute:
-		return e.isExpressionDue(t.Minute())
-	case CronHour:
-		return e.isExpressionDue(t.Hour())
-	case CronDay:
-		return e.isExpressionDue(t.Day())
-	case CronMonth:
-		return e.isExpressionDue(int(t.Month()))
-	case CronWeekday:
-		return e.isExpressionDue(int(t.Weekday()))
-	case CronYear:
-		return e.isExpressionDue(t.Year())
-	default:
-		return false
-	}
-}
-
-func (e Element) isExpressionDue(t int) bool {
-	var (
-		err       error
-		intervals []int
-	)
-	if e.expressionType == CronSimpleExpression && e.expression == "*" {
+func (e *element) Trigger(t time.Time) bool {
+	if e.expression == "*" {
 		return true
 	}
 
-	intervals, err = e.splitExpression()
+	intervals, err := e.parseExpression()
 	if err != nil {
 		return false
 	}
 
-	switch e.expressionType {
-	case CronSimpleExpression:
-		if intervals[0] == t {
+	var input int
+	switch e.p {
+	case positionSecond:
+		input = t.Second()
+	case positionMinute:
+		input = t.Minute()
+	case positionHour:
+		input = t.Hour()
+	case positionDay:
+		input = t.Day()
+	case positionMonth:
+		input = int(t.Month())
+	case positionWeekday:
+		input = int(t.Weekday())
+	case positionYear:
+		input = t.Year()
+	}
+	return e.isDue(intervals, input)
+}
+
+func (e *element) isDue(inputs []int, t int) bool {
+	if inputs == nil || len(inputs) == 0 {
+		return false
+	}
+
+	switch e.q {
+	case qualificationSimple:
+		if inputs[0] == t {
 			return true
 		}
-	case CronMultiExpression:
-		for _, i := range intervals {
+		return false
+	case qualificationMulti:
+		for _, i := range inputs {
 			if i == t {
 				return true
 			}
 		}
 		return false
-	case CronRangeExpression:
-		if t >= intervals[0] && t <= intervals[1] {
+	case qualificationRange:
+		if t >= inputs[0] && t <= inputs[1] {
 			return true
 		}
+		return false
+	case qualificationStep:
+		if t%inputs[0] == 0 {
+			return true
+		}
+		return false
+	default:
+		return false
 	}
-	return false
 }

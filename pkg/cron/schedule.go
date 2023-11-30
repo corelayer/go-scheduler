@@ -24,7 +24,8 @@ import (
 )
 
 var reSpace = regexp.MustCompile(`\s+`)
-var reYear = regexp.MustCompile(`\d{4}`)
+
+// var reYear = regexp.MustCompile(`\d{4}`)
 
 var cronWeekdayLiterals = strings.NewReplacer(
 	"SUN", "0",
@@ -67,9 +68,9 @@ var cronTemplates = map[string]string{
 func NewSchedule(expression string) (Schedule, error) {
 	s := Schedule{
 		expression: expression,
-		elements:   make([]Element, 6),
+		elements:   make([]element, 6),
 	}
-	s.replaceCronTemplates()
+	s.replaceTemplates()
 	s.normalize()
 	err := s.parse()
 	if err != nil {
@@ -80,10 +81,10 @@ func NewSchedule(expression string) (Schedule, error) {
 
 type Schedule struct {
 	expression string
-	elements   []Element
+	elements   []element
 }
 
-func (s Schedule) replaceCronTemplates() {
+func (s Schedule) replaceTemplates() {
 	// Replace template expression with a valid cron expression
 	if t, ok := cronTemplates[s.expression]; ok {
 		s.expression = t
@@ -132,16 +133,16 @@ func (s Schedule) parse() error {
 	}
 
 	if len(elements) == 7 {
-		s.elements = make([]Element, 7)
+		s.elements = make([]element, 7)
 	}
 
-	for elementType, expression := range elements {
-		var e Element
-		e, err = NewElement(expression, ElementType(elementType))
+	for i, expression := range elements {
+		var e element
+		e, err = newElement(expression, position(i))
 		if err != nil {
 			break
 		}
-		s.elements[elementType] = e
+		s.elements[i] = e
 	}
 	return err
 }
@@ -149,7 +150,7 @@ func (s Schedule) parse() error {
 func (s Schedule) IsDue(t time.Time) bool {
 	var o bool
 	for _, e := range s.elements {
-		if o = e.IsDue(t); !o {
+		if o = e.Trigger(t); !o {
 			return o
 		}
 	}

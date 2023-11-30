@@ -14,30 +14,23 @@
  *    limitations under the License.
  */
 
-package catalog
+package cron
 
-import (
-	"github.com/google/uuid"
-)
+import "testing"
 
-type ReadWriter interface {
-	Reader
-	Writer
-}
+func TestElementType_String(t *testing.T) {
+	var (
+		result []string
+		wanted = []string{"second", "minute", "hour", "day", "month", "weekday", "year"}
+	)
 
-type Reader interface {
-	All() []Job
-	Schedulable(limit int) []Job
-}
+	for i := 0; i < len(wanted); i++ {
+		result = append(result, position(i).String())
+	}
 
-type Writer interface {
-	Activate(uuid uuid.UUID)
-	Add(job Job)
-	Update(job Job)
-	Delete(uuid uuid.UUID)
-}
-
-type TaskRunner interface {
-	Execute()
-	Notify(n chan JobStatus)
+	for j := 0; j < len(wanted); j++ {
+		if result[j] != wanted[j] {
+			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
+		}
+	}
 }
