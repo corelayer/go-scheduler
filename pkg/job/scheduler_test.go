@@ -39,7 +39,7 @@ func TestNewScheduler(t *testing.T) {
 	}
 	s := NewScheduler(ctx, c, r)
 
-	result := len(s.jobs.All())
+	result := len(s.catalog.All())
 	wanted := 10
 
 	if result != wanted {
@@ -60,12 +60,12 @@ func TestNewScheduler3(t *testing.T) {
 	c := NewSchedulerConfig()
 	s := NewScheduler(ctx, c, NewMemoryCatalog(ctx))
 
-	jobs := s.jobs.Schedulable(c.MaxSchedulableJobs)
+	jobs := s.catalog.Schedulable(c.MaxSchedulableJobs)
 
 	result := len(jobs)
 	wanted := 0
 	if result != 0 {
-		t.Errorf("found %d schedulable jobs, expected %d", result, wanted)
+		t.Errorf("found %d schedulable catalog, expected %d", result, wanted)
 	}
 }
 
@@ -85,20 +85,20 @@ func TestNewScheduler4(t *testing.T) {
 	c := NewSchedulerConfig()
 	s := NewScheduler(ctx, c, r)
 
-	jobs := s.jobs.Schedulable(c.MaxSchedulableJobs)
+	jobs := s.catalog.Schedulable(c.MaxSchedulableJobs)
 
 	result := len(jobs)
 	wanted := 10
 	if result != wanted {
-		t.Errorf("found %d schedulable jobs, expected %d", result, wanted)
+		t.Errorf("found %d schedulable catalog, expected %d", result, wanted)
 	}
 
-	jobs2 := s.jobs.Schedulable(c.MaxSchedulableJobs)
+	jobs2 := s.catalog.Schedulable(c.MaxSchedulableJobs)
 
 	result2 := len(jobs2)
 	wanted2 := 10
 	if result2 != wanted2 {
-		t.Errorf("found %d schedulable jobs, expected %d", result2, wanted2)
+		t.Errorf("found %d schedulable catalog, expected %d", result2, wanted2)
 	}
 }
 
@@ -114,7 +114,7 @@ func TestNewScheduler4(t *testing.T) {
 // 	s := NewScheduler(ctx)
 //
 // 	for i := 0; i < 20; i++ {
-// 		s.Add(&Job{
+// 		s.Push(&Job{
 // 			Name:  "test",
 // 			Tasks: []TaskRunner{TaskMock{}},
 // 		})
@@ -126,7 +126,7 @@ func TestNewScheduler4(t *testing.T) {
 // 	s := NewScheduler(ctx)
 //
 // 	for i := 0; i < b.N; i++ {
-// 		s.Add(&Job{
+// 		s.Push(&Job{
 // 			Name:  "test",
 // 			Tasks: []TaskRunner{TaskMock{}},
 // 		})

@@ -23,32 +23,32 @@ import (
 
 func TestQueue_Add(t *testing.T) {
 	ctx := context.Background()
-	jl := newQueue(ctx)
+	jl := newQueue(ctx, 10)
 
 	for i := 0; i < 20; i++ {
-		jl.Add(Job{Name: "test"})
+		jl.Push(Job{Name: "test"})
 	}
 }
 
 func TestNewQueue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	newQueue(ctx)
+	newQueue(ctx, 10)
 	cancel()
 }
 
 func TestNewQueue2(t *testing.T) {
 	ctx := context.Background()
-	jl := newQueue(ctx)
+	jl := newQueue(ctx, 10)
 	close(jl.chIn)
 }
 
 func TestQueue_Get(t *testing.T) {
 	ctx := context.Background()
-	jl := newQueue(ctx)
+	jl := newQueue(ctx, 10)
 	tests := make([]string, 10)
 
 	for i := 0; i < 10; i++ {
-		jl.Add(Job{Name: "test"})
+		jl.Push(Job{Name: "test"})
 		tests[i] = "test"
 	}
 
@@ -56,7 +56,7 @@ func TestQueue_Get(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test, func(t *testing.T) {
-			result, err := jl.Get()
+			result, err := jl.Pop()
 			if err != nil {
 				return
 			}
@@ -74,7 +74,7 @@ func TestQueue_Get(t *testing.T) {
 
 func TestQueue_Length(t *testing.T) {
 	ctx := context.Background()
-	jl := newQueue(ctx)
+	jl := newQueue(ctx, 10)
 
 	result := jl.Length()
 	wanted := 0
@@ -86,7 +86,7 @@ func TestQueue_Length(t *testing.T) {
 
 func TestQueue_Capacity(t *testing.T) {
 	ctx := context.Background()
-	jl := newQueue(ctx)
+	jl := newQueue(ctx, 10)
 
 	result := jl.Capacity()
 	wanted := 0
@@ -101,6 +101,6 @@ func TestQueue_Capacity(t *testing.T) {
 // 	jl := newQueue(ctx)
 //
 // 	for i := 0; i < b.N; i++ {
-// 		jl.Add(Job{Name: "test"})
+// 		jl.Push(Job{Name: "test"})
 // 	}
 // }

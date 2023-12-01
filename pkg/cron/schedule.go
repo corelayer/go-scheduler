@@ -148,7 +148,6 @@ func (s *Schedule) parse() error {
 func (s *Schedule) IsDue(t time.Time) bool {
 	var o bool
 	for _, e := range s.elements {
-		fmt.Println(e.p.String(), e.expression)
 		if o = e.Trigger(t); !o {
 			break
 		}

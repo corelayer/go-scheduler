@@ -16,27 +16,6 @@
 
 package job
 
-import (
-	"github.com/google/uuid"
-)
-
-type ReadWriter interface {
-	Reader
-	Writer
-}
-
-type Reader interface {
-	All() []Job
-	Schedulable(limit int) []Job
-}
-
-type Writer interface {
-	Activate(uuid uuid.UUID)
-	Add(job Job)
-	Update(job Job)
-	Delete(uuid uuid.UUID)
-}
-
 type TaskRunner interface {
 	Execute()
 	Notify(n chan Status)

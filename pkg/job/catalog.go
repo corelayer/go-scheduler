@@ -16,36 +16,21 @@
 
 package job
 
-import (
-	"time"
+import "github.com/google/uuid"
 
-	"github.com/google/uuid"
-
-	"github.com/corelayer/go-scheduler/pkg/cron"
-)
-
-type Job struct {
-	Uuid     uuid.UUID
-	Enabled  bool
-	Status   Status
-	Schedule cron.Schedule
-	Name     string
-	Tasks    []TaskRunner
+type Catalog interface {
+	CatalogReader
+	CatalogWriter
 }
 
-func (j *Job) Activate() bool {
-	if !j.Enabled {
-		return false
-	}
-	return j.Schedule.IsDue(time.Now())
+type CatalogReader interface {
+	All() []Job
+	Schedulable(limit int) []Job
 }
 
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
-	}
-	if j.Status == StatusSchedulable {
-		return true
-	}
-	return false
+type CatalogWriter interface {
+	Activate(uuid uuid.UUID)
+	Add(job Job)
+	Update(job Job)
+	Delete(uuid uuid.UUID)
 }

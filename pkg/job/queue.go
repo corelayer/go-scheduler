@@ -22,10 +22,10 @@ import (
 	"sync"
 )
 
-func newQueue(ctx context.Context) *queue {
+func newQueue(ctx context.Context, max int) *queue {
 	s := &queue{
 		jobs: make([]Job, 0),
-		chIn: make(chan Job, 10),
+		chIn: make(chan Job, max),
 	}
 	go s.handleInput(ctx)
 	return s
@@ -45,11 +45,11 @@ func (q *queue) Capacity() int {
 	return cap(q.jobs)
 }
 
-func (q *queue) Add(job Job) {
+func (q *queue) Push(job Job) {
 	q.chIn <- job
 }
 
-func (q *queue) Get() (Job, error) {
+func (q *queue) Pop() (Job, error) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	if len(q.jobs) > 0 {

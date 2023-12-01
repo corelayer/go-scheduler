@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/corelayer/go-scheduler/pkg/cron"
 )
 
 func TestNewMemoryCatalog(t *testing.T) {
@@ -124,7 +126,7 @@ func TestMemoryCatalog_Schedulable(t *testing.T) {
 	wanted := 10
 
 	if len(result) != wanted {
-		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
+		t.Errorf("got %d schedulable catalog, expected %d", len(result), wanted)
 	}
 }
 
@@ -146,7 +148,7 @@ func TestMemoryCatalog_Schedulable2(t *testing.T) {
 	wanted := 5
 
 	if len(result) != wanted {
-		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
+		t.Errorf("got %d schedulable catalog, expected %d", len(result), wanted)
 	}
 }
 
@@ -248,14 +250,17 @@ func TestMemoryCatalog_deleteJob(t *testing.T) {
 func BenchmarkMemoryCatalog_Add(b *testing.B) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
+	s, _ := cron.NewSchedule("@everysecond")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		r.addJob(Job{
-			Uuid:   uuid.New(),
-			Name:   "testJob",
-			Tasks:  nil,
-			Status: StatusNone,
+			Uuid:     uuid.New(),
+			Name:     "testJob",
+			Tasks:    nil,
+			Status:   StatusNone,
+			Schedule: s,
+			Enabled:  false,
 		})
 	}
 }
@@ -263,22 +268,25 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 func BenchmarkMemoryCatalog_Update(b *testing.B) {
 	ctx := context.Background()
 	r := NewMemoryCatalog(ctx)
+	s, _ := cron.NewSchedule("@everysecond")
 
 	id := uuid.New()
 	r.addJob(Job{
-		Uuid:   id,
-		Name:   "testJob",
-		Tasks:  nil,
-		Status: StatusNone,
+		Uuid:     id,
+		Name:     "testJob",
+		Tasks:    nil,
+		Status:   StatusNone,
+		Schedule: s,
+		Enabled:  false,
 	})
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		r.updateJob(Job{
 			Uuid:   id,
-			Name:   "testJob" + strconv.Itoa(i),
+			Name:   "a",
 			Tasks:  nil,
-			Status: 0,
+			Status: StatusStarted,
 		})
 	}
 }

@@ -21,21 +21,28 @@ import (
 	"time"
 )
 
-func NewScheduler(ctx context.Context, c SchedulerConfig, r ReadWriter) *Scheduler {
+func NewScheduler(ctx context.Context, config SchedulerConfig, catalog Catalog) *Scheduler {
 	s := &Scheduler{
-		config: c,
-		jobs:   r,
-		queue:  newQueue(ctx),
+		config:       config,
+		catalog:      catalog,
+		runnerQueue:  newQueue(ctx, config.MaxSchedulableJobs),
+		resultsQueue: newQueue(ctx, config.MaxSchedulableJobs),
+		chRunner:     make(chan Job, config.MaxSchedulableJobs),
+		chResults:    make(chan Job, config.MaxSchedulableJobs),
 	}
 	go s.schedule(ctx)
 	go s.verifySchedule(ctx)
+	go s.notifyRunners(ctx)
 	return s
 }
 
 type Scheduler struct {
-	config SchedulerConfig
-	jobs   ReadWriter
-	queue  *queue
+	config       SchedulerConfig
+	catalog      Catalog
+	runnerQueue  *queue
+	resultsQueue *queue
+	chRunner     chan Job
+	chResults    chan Job
 }
 
 func (s *Scheduler) schedule(ctx context.Context) {
@@ -45,12 +52,12 @@ func (s *Scheduler) schedule(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			jobs := s.jobs.Schedulable(s.config.MaxSchedulableJobs)
+			jobs := s.catalog.Schedulable(s.config.MaxSchedulableJobs)
 			if jobs != nil {
 				for _, job := range jobs {
 					job.Status = StatusScheduled
-					s.jobs.Update(job)
-					// s.queue.Add(job)
+					s.catalog.Update(job)
+					s.runnerQueue.Push(job)
 				}
 				// time.Sleep(s.config.GetScheduleDelay() * time.Second)
 			} else {
@@ -66,11 +73,11 @@ func (s *Scheduler) verifySchedule(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			jobs := s.jobs.All()
+			jobs := s.catalog.All()
 			if jobs != nil {
 				for _, job := range jobs {
 					if job.Activate() {
-						s.jobs.Activate(job.Uuid)
+						s.catalog.Activate(job.Uuid)
 					}
 				}
 			} else {
@@ -80,8 +87,23 @@ func (s *Scheduler) verifySchedule(ctx context.Context) {
 	}
 }
 
-// func (s *Scheduler) Add(job *Job) {
-// 	s.queue.Add(job)
+func (s *Scheduler) notifyRunners(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			job, err := s.runnerQueue.Pop()
+			if err != nil {
+				time.Sleep(s.config.GetNoJobsSchedulableDelay())
+			}
+			s.chRunner <- job
+		}
+	}
+}
+
+// func (s *Scheduler) Push(job *Job) {
+// 	s.runnerQueue.Push(job)
 // }
 
 // func (s *Scheduler) run(ctx context.Context) {
@@ -90,7 +112,7 @@ func (s *Scheduler) verifySchedule(ctx context.Context) {
 // 		case <-ctx.Done():
 // 			return
 // 		default:
-// 			job, err := s.queue.Get()
+// 			job, err := s.runnerQueue.Pop()
 // 			if err != nil {
 // 				time.Sleep(1 * time.Second)
 // 				continue

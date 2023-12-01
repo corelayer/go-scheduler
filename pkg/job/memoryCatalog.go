@@ -71,7 +71,7 @@ func (c *MemoryCatalog) Delete(uuid uuid.UUID) {
 // 	r.mux.Lock()
 // 	defer r.mux.Unlock()
 //
-// 	if _, found := r.jobs[uuid]; found {
+// 	if _, found := r.catalog[uuid]; found {
 // 		return true
 // 	}
 // 	return false
