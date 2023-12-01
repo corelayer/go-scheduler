@@ -84,14 +84,14 @@ type Schedule struct {
 	elements   []element
 }
 
-func (s Schedule) replaceTemplates() {
+func (s *Schedule) replaceTemplates() {
 	// Replace template expression with a valid cron expression
 	if t, ok := cronTemplates[s.expression]; ok {
 		s.expression = t
 	}
 }
 
-func (s Schedule) normalize() {
+func (s *Schedule) normalize() {
 	// Replace all spaces with a single space
 	s.expression = reSpace.ReplaceAllString(s.expression, " ")
 
@@ -104,7 +104,7 @@ func (s Schedule) normalize() {
 	s.expression = cronMonthLiterals.Replace(s.expression)
 }
 
-func (s Schedule) standardize() ([]string, error) {
+func (s *Schedule) standardize() ([]string, error) {
 	segments := strings.Split(s.expression, " ")
 	count := len(segments)
 
@@ -121,7 +121,7 @@ func (s Schedule) standardize() ([]string, error) {
 	return segments, nil
 }
 
-func (s Schedule) parse() error {
+func (s *Schedule) parse() error {
 	var (
 		elements []string
 		err      error
@@ -132,26 +132,25 @@ func (s Schedule) parse() error {
 		return err
 	}
 
-	if len(elements) == 7 {
-		s.elements = make([]element, 7)
-	}
+	s.elements = make([]element, len(elements))
 
 	for i, expression := range elements {
 		var e element
 		e, err = newElement(expression, position(i))
 		if err != nil {
-			break
+			return err
 		}
 		s.elements[i] = e
 	}
-	return err
+	return nil
 }
 
-func (s Schedule) IsDue(t time.Time) bool {
+func (s *Schedule) IsDue(t time.Time) bool {
 	var o bool
 	for _, e := range s.elements {
+		fmt.Println(e.p.String(), e.expression)
 		if o = e.Trigger(t); !o {
-			return o
+			break
 		}
 	}
 	return o
