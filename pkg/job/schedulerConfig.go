@@ -23,31 +23,36 @@ import (
 
 func NewSchedulerConfig() SchedulerConfig {
 	return SchedulerConfig{
-		StartDelaySeconds:             0,
-		ScheduleDelaySeconds:          1,
-		NoSchedulableJobsDelaySeconds: 5,
-		MaxSchedulableJobs:            10,
+		StartDelayMilliseconds:             1,
+		ScheduleDelayMilliseconds:          1,
+		NoSchedulableJobsDelayMilliseconds: 2,
+		MaxSchedulableJobs:                 10,
 	}
 }
 
 type SchedulerConfig struct {
-	StartDelaySeconds             int
-	ScheduleDelaySeconds          int
-	NoSchedulableJobsDelaySeconds int
-	MaxSchedulableJobs            int
+	StartDelayMilliseconds             int
+	ScheduleDelayMilliseconds          int
+	NoSchedulableJobsDelayMilliseconds int
+	MaxSchedulableJobs                 int
 }
 
-func (c *SchedulerConfig) GetStartDelay() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.StartDelaySeconds) + "s")
+func (c SchedulerConfig) WithMaxJobs(max int) SchedulerConfig {
+	c.MaxSchedulableJobs = max
+	return c
+}
+
+func (c SchedulerConfig) GetStartDelayDuration() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.StartDelayMilliseconds) + "ms")
 	return d
 }
 
-func (c *SchedulerConfig) GetScheduleDelay() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelaySeconds) + "s")
+func (c SchedulerConfig) GetScheduleDelayDuration() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelayMilliseconds) + "ms")
 	return d
 }
 
-func (c *SchedulerConfig) GetNoJobsSchedulableDelay() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.NoSchedulableJobsDelaySeconds) + "s")
+func (c SchedulerConfig) GetNoSchedulableJobsDelayDuration() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.NoSchedulableJobsDelayMilliseconds) + "ms")
 	return d
 }

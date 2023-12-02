@@ -1,23 +1,21 @@
-/*
- * Copyright 2023 CoreLayer BV
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
+// /*
+//   - Copyright 2023 CoreLayer BV
+//     *
+//   - Licensed under the Apache License, Version 2.0 (the "License");
+//   - you may not use this file except in compliance with the License.
+//   - You may obtain a copy of the License at
+//     *
+//   - http://www.apache.org/licenses/LICENSE-2.0
+//     *
+//   - Unless required by applicable law or agreed to in writing, software
+//   - distributed under the License is distributed on an "AS IS" BASIS,
+//   - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   - See the License for the specific language governing permissions and
+//   - limitations under the License.
+//     */
 package job
 
 import (
-	"context"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -29,8 +27,7 @@ import (
 )
 
 func TestNewMemoryCatalog(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	r.mux.Lock()
 	result := len(r.jobs)
@@ -42,44 +39,8 @@ func TestNewMemoryCatalog(t *testing.T) {
 	}
 }
 
-func TestNewMemoryCatalog2(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	NewMemoryCatalog(ctx)
-
-	cancel()
-}
-
-func TestNewMemoryCatalog3(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
-
-	close(r.chInput)
-}
-
-func TestNewMemoryCatalog4(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
-
-	close(r.chDelete)
-}
-
-func TestNewMemoryCatalog5(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
-
-	close(r.chUpdate)
-}
-
-func TestNewRepository6(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
-
-	close(r.chActivate)
-}
-
 func TestMemoryCatalog_Add(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	r.Add(Job{
 		Uuid:   uuid.New(),
@@ -90,8 +51,7 @@ func TestMemoryCatalog_Add(t *testing.T) {
 }
 
 func TestMemoryCatalog_Delete(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	uuids := make([]uuid.UUID, 10)
 
@@ -110,11 +70,10 @@ func TestMemoryCatalog_Delete(t *testing.T) {
 }
 
 func TestMemoryCatalog_Schedulable(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	for i := 0; i < 10; i++ {
-		r.addJob(Job{
+		r.Add(Job{
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Tasks:   nil,
@@ -122,7 +81,7 @@ func TestMemoryCatalog_Schedulable(t *testing.T) {
 			Enabled: true,
 		})
 	}
-	result := r.Schedulable(0)
+	result := r.GetDueJobs(0)
 	wanted := 10
 
 	if len(result) != wanted {
@@ -131,11 +90,10 @@ func TestMemoryCatalog_Schedulable(t *testing.T) {
 }
 
 func TestMemoryCatalog_Schedulable2(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	for i := 0; i < 10; i++ {
-		r.addJob(Job{
+		r.Add(Job{
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Tasks:   nil,
@@ -144,7 +102,7 @@ func TestMemoryCatalog_Schedulable2(t *testing.T) {
 		})
 	}
 
-	result := r.Schedulable(5)
+	result := r.GetDueJobs(5)
 	wanted := 5
 
 	if len(result) != wanted {
@@ -153,8 +111,7 @@ func TestMemoryCatalog_Schedulable2(t *testing.T) {
 }
 
 func TestMemoryCatalog_Update(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	id := uuid.New()
 	r.jobs[id] = Job{
@@ -182,8 +139,7 @@ func TestMemoryCatalog_Update(t *testing.T) {
 }
 
 func TestMemoryCatalog_Update2(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	uuid1 := uuid.New()
 	r.jobs[uuid1] = Job{
@@ -193,7 +149,7 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 		Status: StatusNone,
 	}
 
-	r.updateJob(Job{
+	r.Update(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
 		Tasks:  nil,
@@ -211,8 +167,7 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 }
 
 func TestMemoryCatalog_deleteJob(t *testing.T) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 
 	uuids := make([]uuid.UUID, 10)
 	jobs := make(map[uuid.UUID]Job)
@@ -228,7 +183,7 @@ func TestMemoryCatalog_deleteJob(t *testing.T) {
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(9)
 
-	r.deleteJob(uuids[d])
+	r.Delete(uuids[d])
 
 	r.mux.Lock()
 	j := r.jobs
@@ -248,8 +203,7 @@ func TestMemoryCatalog_deleteJob(t *testing.T) {
 }
 
 func BenchmarkMemoryCatalog_Add(b *testing.B) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 	s, _ := cron.NewSchedule("@everysecond")
 
 	var id []uuid.UUID
@@ -259,7 +213,7 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r.addJob(Job{
+		r.Add(Job{
 			Uuid:     id[i],
 			Name:     "testJob",
 			Tasks:    nil,
@@ -271,12 +225,11 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 }
 
 func BenchmarkMemoryCatalog_Update(b *testing.B) {
-	ctx := context.Background()
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 	s, _ := cron.NewSchedule("@everysecond")
 
 	id := uuid.New()
-	r.addJob(Job{
+	r.Add(Job{
 		Uuid:     id,
 		Name:     "testJob",
 		Tasks:    nil,
@@ -287,7 +240,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r.updateJob(Job{
+		r.Update(Job{
 			Uuid:   id,
 			Name:   "a",
 			Tasks:  nil,

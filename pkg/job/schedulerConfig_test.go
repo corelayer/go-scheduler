@@ -21,7 +21,6 @@ import (
 	"time"
 )
 
-// TODO TestNewSchedulerConfig
 func TestNewSchedulerConfig(t *testing.T) {
 	c := NewSchedulerConfig()
 
@@ -30,30 +29,34 @@ func TestNewSchedulerConfig(t *testing.T) {
 	}
 }
 
+// TODO TestSchedulerConfig_WithMaxJobs
+func TestSchedulerConfig_WithMaxJobs(t *testing.T) {
+
+}
+
 func TestSchedulerConfig_GetNoJobsSchedulableDelay(t *testing.T) {
 	c := NewSchedulerConfig()
-	d, _ := time.ParseDuration("5s")
+	d, _ := time.ParseDuration("2ms")
 
-	if d != c.GetNoJobsSchedulableDelay() {
-		t.Errorf("expected 5s duration, got %s", c.GetNoJobsSchedulableDelay().String())
+	if d != c.GetNoSchedulableJobsDelayDuration() {
+		t.Errorf("expected 2ms duration, got %s", c.GetNoSchedulableJobsDelayDuration().String())
 	}
 }
 
 func TestSchedulerConfig_GetScheduleDelay(t *testing.T) {
 	c := NewSchedulerConfig()
-	d, _ := time.ParseDuration("1s")
+	d, _ := time.ParseDuration("1ms")
 
-	if d != c.GetScheduleDelay() {
-		t.Errorf("expected 1s duration, got %s", c.GetScheduleDelay().String())
+	if d != c.GetScheduleDelayDuration() {
+		t.Errorf("expected 1ms duration, got %s", c.GetScheduleDelayDuration().String())
 	}
 }
 
-// TODO TestSchedulerConfig_GetStartDelay
 func TestSchedulerConfig_GetStartDelay(t *testing.T) {
 	c := NewSchedulerConfig()
-	d, _ := time.ParseDuration("0s")
+	d, _ := time.ParseDuration("1ms")
 
-	if d != c.GetStartDelay() {
-		t.Errorf("expected 10s duration, got %s", c.GetStartDelay().String())
+	if d != c.GetStartDelayDuration() {
+		t.Errorf("expected 1ms duration, got %s", c.GetStartDelayDuration().String())
 	}
 }

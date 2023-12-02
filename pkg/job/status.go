@@ -19,11 +19,12 @@ package job
 type Status int
 
 func (s Status) String() string {
-	return [...]string{"none", "schedulable", "scheduled", "pending", "started", "in progress", "ready", "completed"}[s]
+	return [...]string{"none", "is due", "schedulable", "scheduled", "pending", "started", "in progress", "ready", "completed"}[s]
 }
 
 const (
 	StatusNone Status = iota
+	StatusIsDue
 	StatusSchedulable
 	StatusScheduled
 	StatusPending

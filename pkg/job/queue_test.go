@@ -17,38 +17,29 @@
 package job
 
 import (
-	"context"
+	"sync"
 	"testing"
 )
 
 func TestQueue_Add(t *testing.T) {
-	ctx := context.Background()
-	jl := newQueue(ctx, 10)
-
+	q := NewMemoryQueue()
+	wg := sync.WaitGroup{}
 	for i := 0; i < 20; i++ {
-		jl.Push(Job{Name: "test"})
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			q.Push(Job{Name: "test"})
+		}(&wg)
 	}
-}
-
-func TestNewQueue(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	newQueue(ctx, 10)
-	cancel()
-}
-
-func TestNewQueue2(t *testing.T) {
-	ctx := context.Background()
-	jl := newQueue(ctx, 10)
-	close(jl.chIn)
+	wg.Wait()
 }
 
 func TestQueue_Get(t *testing.T) {
-	ctx := context.Background()
-	jl := newQueue(ctx, 10)
+	q := NewMemoryQueue()
 	tests := make([]string, 10)
 
 	for i := 0; i < 10; i++ {
-		jl.Push(Job{Name: "test"})
+		q.Push(Job{Name: "test"})
 		tests[i] = "test"
 	}
 
@@ -56,7 +47,7 @@ func TestQueue_Get(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test, func(t *testing.T) {
-			result, err := jl.Pop()
+			result, err := q.Pop()
 			if err != nil {
 				return
 			}
@@ -73,10 +64,9 @@ func TestQueue_Get(t *testing.T) {
 }
 
 func TestQueue_Length(t *testing.T) {
-	ctx := context.Background()
-	jl := newQueue(ctx, 10)
+	q := NewMemoryQueue()
 
-	result := jl.Length()
+	result := q.Length()
 	wanted := 0
 
 	if result != wanted {
@@ -85,10 +75,9 @@ func TestQueue_Length(t *testing.T) {
 }
 
 func TestQueue_Capacity(t *testing.T) {
-	ctx := context.Background()
-	jl := newQueue(ctx, 10)
+	q := NewMemoryQueue()
 
-	result := jl.Capacity()
+	result := q.Capacity()
 	wanted := 0
 
 	if result != wanted {
@@ -96,11 +85,17 @@ func TestQueue_Capacity(t *testing.T) {
 	}
 }
 
-// func BenchmarkJobQueue_Add(b *testing.B) {
-// 	ctx := context.Background()
-// 	jl := newQueue(ctx)
-//
-// 	for i := 0; i < b.N; i++ {
-// 		jl.Push(Job{Name: "test"})
-// 	}
-// }
+func BenchmarkQueue_Add(b *testing.B) {
+	q := NewMemoryQueue()
+	wg := sync.WaitGroup{}
+
+	job := Job{Name: "test"}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			q.Push(job)
+		}(&wg)
+	}
+}

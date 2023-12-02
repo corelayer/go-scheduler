@@ -21,47 +21,36 @@ import (
 	"time"
 )
 
-func NewScheduler(ctx context.Context, config SchedulerConfig, catalog Catalog) *Scheduler {
+func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogReadWriter) *Scheduler {
 	s := &Scheduler{
-		config:       config,
-		catalog:      catalog,
-		runnerQueue:  newQueue(ctx, config.MaxSchedulableJobs),
-		resultsQueue: newQueue(ctx, config.MaxSchedulableJobs),
-		chRunner:     make(chan Job, config.MaxSchedulableJobs),
-		chResults:    make(chan Job, config.MaxSchedulableJobs),
+		config:  config,
+		catalog: catalog,
 	}
 	go s.schedule(ctx)
 	go s.verifySchedule(ctx)
-	go s.notifyRunners(ctx)
 	return s
 }
 
 type Scheduler struct {
-	config       SchedulerConfig
-	catalog      Catalog
-	runnerQueue  *queue
-	resultsQueue *queue
-	chRunner     chan Job
-	chResults    chan Job
+	config  SchedulerConfig
+	catalog CatalogReadWriter
 }
 
 func (s *Scheduler) schedule(ctx context.Context) {
-	time.Sleep(s.config.GetStartDelay() * time.Second)
+	time.Sleep(s.config.GetStartDelayDuration())
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			jobs := s.catalog.Schedulable(s.config.MaxSchedulableJobs)
-			if jobs != nil {
-				for _, job := range jobs {
-					job.Status = StatusScheduled
-					s.catalog.Update(job)
-					s.runnerQueue.Push(job)
-				}
-				// time.Sleep(s.config.GetScheduleDelay() * time.Second)
-			} else {
-				time.Sleep(s.config.GetNoJobsSchedulableDelay() * time.Second)
+			jobs := s.catalog.GetDueJobs(s.config.MaxSchedulableJobs)
+			if len(jobs) == 0 {
+				time.Sleep(s.config.GetNoSchedulableJobsDelayDuration())
+				continue
+			}
+			for _, job := range jobs {
+				job.Status = StatusSchedulable
+				s.catalog.Update(job)
 			}
 		}
 	}
@@ -73,67 +62,17 @@ func (s *Scheduler) verifySchedule(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			jobs := s.catalog.All()
-			if jobs != nil {
-				for _, job := range jobs {
-					if job.Activate() {
-						s.catalog.Activate(job.Uuid)
-					}
+			time.Sleep(s.config.GetScheduleDelayDuration())
+			jobs := s.catalog.GetNotSchedulableJobs()
+			if len(jobs) == 0 {
+				time.Sleep(s.config.GetNoSchedulableJobsDelayDuration())
+				continue
+			}
+			for _, job := range jobs {
+				if job.Status == StatusNone && job.IsDue() {
+					s.catalog.Activate(job.Uuid)
 				}
-			} else {
-				time.Sleep(s.config.GetScheduleDelay() * time.Second)
 			}
 		}
 	}
 }
-
-func (s *Scheduler) notifyRunners(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			job, err := s.runnerQueue.Pop()
-			if err != nil {
-				time.Sleep(s.config.GetNoJobsSchedulableDelay())
-			}
-			s.chRunner <- job
-		}
-	}
-}
-
-// func (s *Scheduler) Push(job *Job) {
-// 	s.runnerQueue.Push(job)
-// }
-
-// func (s *Scheduler) run(ctx context.Context) {
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			return
-// 		default:
-// 			job, err := s.runnerQueue.Pop()
-// 			if err != nil {
-// 				time.Sleep(1 * time.Second)
-// 				continue
-// 			}
-// 			s.chIn <- job
-// 		}
-// 	}
-// }
-
-// func (s *Scheduler) process(ctx context.Context) {
-// 	for {
-// 		select {
-// 		case job, ok := <-s.chIn:
-// 			if !ok {
-// 				return
-// 			}
-// 			for _, t := range job.Tasks {
-// 				t.Execute()
-// 			}
-// 		case <-ctx.Done():
-// 			return
-// 		}
-// 	}
-// }

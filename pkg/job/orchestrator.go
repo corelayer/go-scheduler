@@ -16,7 +16,26 @@
 
 package job
 
-type TaskRunner interface {
-	Execute()
-	Notify(n chan Status)
+import (
+	"context"
+)
+
+type OrchestratorConfig struct {
+	MaxJobs int
+}
+
+func NewOrchestrator(ctx context.Context, config OrchestratorConfig, catalog *MemoryCatalog) *Orchestrator {
+	o := &Orchestrator{
+		c: catalog,
+		s: NewScheduler(ctx, NewSchedulerConfig().WithMaxJobs(config.MaxJobs), catalog),
+		r: NewRunner(ctx, NewRunnerConfig().WithMaxJobs(config.MaxJobs), catalog),
+	}
+
+	return o
+}
+
+type Orchestrator struct {
+	c *MemoryCatalog
+	s *Scheduler
+	r *Runner
 }

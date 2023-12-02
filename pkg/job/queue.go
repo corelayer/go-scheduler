@@ -16,62 +16,9 @@
 
 package job
 
-import (
-	"context"
-	"fmt"
-	"sync"
-)
-
-func newQueue(ctx context.Context, max int) *queue {
-	s := &queue{
-		jobs: make([]Job, 0),
-		chIn: make(chan Job, max),
-	}
-	go s.handleInput(ctx)
-	return s
-}
-
-type queue struct {
-	jobs []Job
-	chIn chan Job
-
-	mux sync.Mutex
-}
-
-func (q *queue) Length() int {
-	return len(q.jobs)
-}
-func (q *queue) Capacity() int {
-	return cap(q.jobs)
-}
-
-func (q *queue) Push(job Job) {
-	q.chIn <- job
-}
-
-func (q *queue) Pop() (Job, error) {
-	q.mux.Lock()
-	defer q.mux.Unlock()
-	if len(q.jobs) > 0 {
-		job := q.jobs[0]
-		q.jobs = q.jobs[1:]
-		return job, nil
-	}
-	return Job{}, fmt.Errorf("no jobs available")
-}
-
-func (q *queue) handleInput(ctx context.Context) {
-	for {
-		select {
-		case job, ok := <-q.chIn:
-			if !ok {
-				return
-			}
-			q.mux.Lock()
-			q.jobs = append(q.jobs, job)
-			q.mux.Unlock()
-		case <-ctx.Done():
-			return
-		}
-	}
+type Queue interface {
+	Length() int
+	Capacity() int
+	Push(job Job)
+	Pop() (Job, error)
 }

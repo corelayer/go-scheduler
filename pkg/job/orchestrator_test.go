@@ -17,6 +17,9 @@
 package job
 
 import (
+	"context"
+	"strconv"
+	"testing"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,29 +27,31 @@ import (
 	"github.com/corelayer/go-scheduler/pkg/cron"
 )
 
-type Job struct {
-	Uuid     uuid.UUID
-	Enabled  bool
-	Status   Status
-	Schedule cron.Schedule
-	Name     string
-	Tasks    []TaskRunner
-}
-
-func (j *Job) IsDue() bool {
-	if !j.Enabled {
-		return false
+func TestNewOrchestrator(t *testing.T) {
+	oc := OrchestratorConfig{
+		MaxJobs: 10,
 	}
-	return j.Schedule.IsDue(time.Now())
-}
+	ctx, cancel := context.WithCancel(context.Background())
 
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
+	c := NewMemoryCatalog()
+	NewOrchestrator(ctx, oc, c)
+
+	schedule, _ := cron.NewSchedule("@everysecond")
+	for i := 0; i < 100; i++ {
+		var tasks []TaskRunner
+		for j := 0; j < 5; j++ {
+			tasks = append(tasks, PrintTask{message: strconv.Itoa(i) + "_" + strconv.Itoa(j)})
+		}
+		c.Add(Job{
+			Uuid:     uuid.New(),
+			Enabled:  true,
+			Status:   StatusNone,
+			Schedule: schedule,
+			Name:     strconv.Itoa(i),
+			Tasks:    tasks,
+		})
 	}
-	return j.Status == StatusIsDue
-}
 
-func (j *Job) IsRunnable() bool {
-	return j.Status == StatusSchedulable
+	time.Sleep(15 * time.Second)
+	cancel()
 }

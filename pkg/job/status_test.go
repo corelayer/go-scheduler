@@ -18,10 +18,10 @@ package job
 
 import "testing"
 
-func TestJobStatus_String(t *testing.T) {
+func TestStatus_String(t *testing.T) {
 	var (
 		result []string
-		wanted = []string{"none", "schedulable", "scheduled", "pending", "started", "in progress", "ready", "completed"}
+		wanted = []string{"none", "is due", "schedulable", "scheduled", "pending", "started", "in progress", "ready", "completed"}
 	)
 
 	for i := 0; i < len(wanted); i++ {

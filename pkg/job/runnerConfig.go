@@ -17,36 +17,29 @@
 package job
 
 import (
+	"strconv"
 	"time"
-
-	"github.com/google/uuid"
-
-	"github.com/corelayer/go-scheduler/pkg/cron"
 )
 
-type Job struct {
-	Uuid     uuid.UUID
-	Enabled  bool
-	Status   Status
-	Schedule cron.Schedule
-	Name     string
-	Tasks    []TaskRunner
-}
-
-func (j *Job) IsDue() bool {
-	if !j.Enabled {
-		return false
+func NewRunnerConfig() RunnerConfig {
+	c := RunnerConfig{
+		MaxConcurrentJobs:               10,
+		NoRunnableJobsDelayMilliseconds: 250,
 	}
-	return j.Schedule.IsDue(time.Now())
+	return c
 }
 
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
-	}
-	return j.Status == StatusIsDue
+type RunnerConfig struct {
+	MaxConcurrentJobs               int
+	NoRunnableJobsDelayMilliseconds int
 }
 
-func (j *Job) IsRunnable() bool {
-	return j.Status == StatusSchedulable
+func (c RunnerConfig) WithMaxJobs(max int) RunnerConfig {
+	c.MaxConcurrentJobs = max
+	return c
+}
+
+func (c RunnerConfig) GetNoRunnableJobsDelayDuration() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.NoRunnableJobsDelayMilliseconds) + "ms")
+	return d
 }

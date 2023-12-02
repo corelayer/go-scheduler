@@ -18,14 +18,16 @@ package job
 
 import "github.com/google/uuid"
 
-type Catalog interface {
+type CatalogReadWriter interface {
 	CatalogReader
 	CatalogWriter
 }
 
 type CatalogReader interface {
-	All() []Job
-	Schedulable(limit int) []Job
+	GetNotSchedulableJobs() []Job
+	GetDueJobs(limit int) []Job
+	GetRunnableJobs(limit int) []Job
+	Count() int
 }
 
 type CatalogWriter interface {

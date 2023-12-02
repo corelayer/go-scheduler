@@ -16,37 +16,16 @@
 
 package job
 
-import (
-	"time"
+import "fmt"
 
-	"github.com/google/uuid"
-
-	"github.com/corelayer/go-scheduler/pkg/cron"
-)
-
-type Job struct {
-	Uuid     uuid.UUID
-	Enabled  bool
-	Status   Status
-	Schedule cron.Schedule
-	Name     string
-	Tasks    []TaskRunner
+type TaskRunner interface {
+	Execute()
 }
 
-func (j *Job) IsDue() bool {
-	if !j.Enabled {
-		return false
-	}
-	return j.Schedule.IsDue(time.Now())
+type PrintTask struct {
+	message string
 }
 
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
-	}
-	return j.Status == StatusIsDue
-}
-
-func (j *Job) IsRunnable() bool {
-	return j.Status == StatusSchedulable
+func (t PrintTask) Execute() {
+	fmt.Printf("%s\r\n", t.message)
 }

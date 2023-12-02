@@ -26,11 +26,11 @@ import (
 
 func TestNewScheduler(t *testing.T) {
 	ctx := context.Background()
-	c := SchedulerConfig{StartDelaySeconds: 5}
-	r := NewMemoryCatalog(ctx)
+	c := SchedulerConfig{StartDelayMilliseconds: 5}
+	r := NewMemoryCatalog()
 
 	for i := 0; i < 10; i++ {
-		r.addJob(Job{
+		r.Add(Job{
 			Uuid:   uuid.New(),
 			Name:   strconv.Itoa(i),
 			Tasks:  nil,
@@ -39,7 +39,7 @@ func TestNewScheduler(t *testing.T) {
 	}
 	s := NewScheduler(ctx, c, r)
 
-	result := len(s.catalog.All())
+	result := len(s.catalog.GetNotSchedulableJobs())
 	wanted := 10
 
 	if result != wanted {
@@ -49,8 +49,8 @@ func TestNewScheduler(t *testing.T) {
 
 func TestNewScheduler2(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	c := SchedulerConfig{StartDelaySeconds: 5}
-	NewScheduler(ctx, c, NewMemoryCatalog(ctx))
+	c := SchedulerConfig{StartDelayMilliseconds: 5}
+	NewScheduler(ctx, c, NewMemoryCatalog())
 
 	cancel()
 }
@@ -58,9 +58,9 @@ func TestNewScheduler2(t *testing.T) {
 func TestNewScheduler3(t *testing.T) {
 	ctx := context.Background()
 	c := NewSchedulerConfig()
-	s := NewScheduler(ctx, c, NewMemoryCatalog(ctx))
+	s := NewScheduler(ctx, c, NewMemoryCatalog())
 
-	jobs := s.catalog.Schedulable(c.MaxSchedulableJobs)
+	jobs := s.catalog.GetDueJobs(c.MaxSchedulableJobs)
 
 	result := len(jobs)
 	wanted := 0
@@ -72,9 +72,9 @@ func TestNewScheduler3(t *testing.T) {
 func TestNewScheduler4(t *testing.T) {
 	ctx := context.Background()
 
-	r := NewMemoryCatalog(ctx)
+	r := NewMemoryCatalog()
 	for i := 0; i < 10; i++ {
-		r.addJob(Job{
+		r.Add(Job{
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Enabled: true,
@@ -85,7 +85,7 @@ func TestNewScheduler4(t *testing.T) {
 	c := NewSchedulerConfig()
 	s := NewScheduler(ctx, c, r)
 
-	jobs := s.catalog.Schedulable(c.MaxSchedulableJobs)
+	jobs := s.catalog.GetDueJobs(c.MaxSchedulableJobs)
 
 	result := len(jobs)
 	wanted := 10
@@ -93,52 +93,11 @@ func TestNewScheduler4(t *testing.T) {
 		t.Errorf("found %d schedulable catalog, expected %d", result, wanted)
 	}
 
-	jobs2 := s.catalog.Schedulable(c.MaxSchedulableJobs)
+	jobs2 := s.catalog.GetDueJobs(c.MaxSchedulableJobs)
 
 	result2 := len(jobs2)
 	wanted2 := 10
 	if result2 != wanted2 {
 		t.Errorf("found %d schedulable catalog, expected %d", result2, wanted2)
 	}
-}
-
-//
-// func TestNewScheduler3(t *testing.T) {
-// 	ctx := context.Background()
-// 	s := NewScheduler(ctx)
-// 	close(s.chIn)
-// }
-//
-// func TestScheduler_Add(t *testing.T) {
-// 	ctx := context.Background()
-// 	s := NewScheduler(ctx)
-//
-// 	for i := 0; i < 20; i++ {
-// 		s.Push(&Job{
-// 			Name:  "test",
-// 			Tasks: []TaskRunner{TaskMock{}},
-// 		})
-// 	}
-// }
-//
-// func BenchmarkScheduler_Add(b *testing.B) {
-// 	ctx := context.Background()
-// 	s := NewScheduler(ctx)
-//
-// 	for i := 0; i < b.N; i++ {
-// 		s.Push(&Job{
-// 			Name:  "test",
-// 			Tasks: []TaskRunner{TaskMock{}},
-// 		})
-// 	}
-//
-// }
-
-type TaskMock struct{}
-
-func (m TaskMock) Execute() {
-	return
-}
-func (m TaskMock) Notify(n chan Status) {
-	return
 }

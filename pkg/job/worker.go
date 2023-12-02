@@ -17,36 +17,40 @@
 package job
 
 import (
+	"context"
 	"time"
-
-	"github.com/google/uuid"
-
-	"github.com/corelayer/go-scheduler/pkg/cron"
 )
 
-type Job struct {
-	Uuid     uuid.UUID
-	Enabled  bool
-	Status   Status
-	Schedule cron.Schedule
-	Name     string
-	Tasks    []TaskRunner
-}
-
-func (j *Job) IsDue() bool {
-	if !j.Enabled {
-		return false
+func NewWorker(ctx context.Context, id int, chInput chan Job) *Worker {
+	w := &Worker{
+		id:      id,
+		chInput: chInput,
 	}
-	return j.Schedule.IsDue(time.Now())
+	go w.processJob(ctx)
+	return w
 }
 
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
+type Worker struct {
+	id      int
+	chInput chan Job
+}
+
+func (w *Worker) processJob(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case job, ok := <-w.chInput:
+			if !ok {
+				return
+			}
+			job.Status = StatusInProgress
+			for _, t := range job.Tasks {
+				t.Execute()
+			}
+		default:
+			// fmt.Println("Waiting for jobs to be processed by worker", w.id)
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
-	return j.Status == StatusIsDue
-}
-
-func (j *Job) IsRunnable() bool {
-	return j.Status == StatusSchedulable
 }
