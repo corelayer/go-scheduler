@@ -79,7 +79,7 @@ func TestNewScheduler4(t *testing.T) {
 			Name:    strconv.Itoa(i),
 			Enabled: true,
 			Tasks:   nil,
-			Status:  StatusSchedulable,
+			Status:  StatusIsDue,
 		})
 	}
 	c := NewSchedulerConfig()

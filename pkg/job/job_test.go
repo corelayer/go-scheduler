@@ -26,6 +26,7 @@ func TestJob_Activate(t *testing.T) {
 func TestJob_IsSchedulable1(t *testing.T) {
 	j := Job{
 		Enabled: false,
+		Status:  StatusIsDue,
 	}
 
 	if j.IsSchedulable() {
@@ -47,7 +48,7 @@ func TestJob_IsSchedulable2(t *testing.T) {
 func TestJob_IsSchedulable3(t *testing.T) {
 	j := Job{
 		Enabled: true,
-		Status:  StatusSchedulable,
+		Status:  StatusIsDue,
 	}
 
 	if !j.IsSchedulable() {

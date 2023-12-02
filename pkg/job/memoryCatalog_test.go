@@ -77,7 +77,7 @@ func TestMemoryCatalog_Schedulable(t *testing.T) {
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Tasks:   nil,
-			Status:  StatusSchedulable,
+			Status:  StatusIsDue,
 			Enabled: true,
 		})
 	}
@@ -97,7 +97,7 @@ func TestMemoryCatalog_Schedulable2(t *testing.T) {
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Tasks:   nil,
-			Status:  StatusSchedulable,
+			Status:  StatusIsDue,
 			Enabled: true,
 		})
 	}
