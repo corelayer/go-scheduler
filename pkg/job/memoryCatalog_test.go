@@ -252,10 +252,15 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 	r := NewMemoryCatalog(ctx)
 	s, _ := cron.NewSchedule("@everysecond")
 
+	var id []uuid.UUID
+	for i := 0; i < b.N; i++ {
+		id = append(id, uuid.New())
+	}
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		r.addJob(Job{
-			Uuid:     uuid.New(),
+			Uuid:     id[i],
 			Name:     "testJob",
 			Tasks:    nil,
 			Status:   StatusNone,
