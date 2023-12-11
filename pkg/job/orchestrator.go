@@ -24,7 +24,7 @@ type OrchestratorConfig struct {
 	MaxJobs int
 }
 
-func NewOrchestrator(ctx context.Context, config OrchestratorConfig, catalog *MemoryCatalog) *Orchestrator {
+func NewOrchestrator(ctx context.Context, config OrchestratorConfig, catalog CatalogReadWriter) *Orchestrator {
 	o := &Orchestrator{
 		c: catalog,
 		s: NewScheduler(ctx, NewSchedulerConfig().WithMaxJobs(config.MaxJobs), catalog),
@@ -35,7 +35,7 @@ func NewOrchestrator(ctx context.Context, config OrchestratorConfig, catalog *Me
 }
 
 type Orchestrator struct {
-	c *MemoryCatalog
+	c CatalogReadWriter
 	s *Scheduler
 	r *Runner
 }

@@ -29,3 +29,9 @@ type PrintTask struct {
 func (t PrintTask) Execute() {
 	fmt.Printf("%s\r\n", t.message)
 }
+
+type EmptyTask struct{}
+
+func (t EmptyTask) Execute() {
+	return
+}

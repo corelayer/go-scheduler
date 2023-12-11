@@ -89,13 +89,14 @@ func BenchmarkQueue_Add(b *testing.B) {
 	q := NewMemoryQueue()
 	wg := sync.WaitGroup{}
 
-	job := Job{Name: "test"}
+	// job := Job{Name: "test"}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		wg.Add(1)
-		go func(wg *sync.WaitGroup) {
+		go func(mq *MemoryQueue, wg *sync.WaitGroup) {
 			defer wg.Done()
-			q.Push(job)
-		}(&wg)
+			mq.Push(Job{Name: "test"})
+		}(q, &wg)
 	}
+	wg.Wait()
 }

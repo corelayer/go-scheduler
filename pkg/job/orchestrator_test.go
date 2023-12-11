@@ -40,7 +40,7 @@ func TestNewOrchestrator(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		var tasks []TaskRunner
 		for j := 0; j < 5; j++ {
-			tasks = append(tasks, PrintTask{message: strconv.Itoa(i) + "_" + strconv.Itoa(j)})
+			tasks = append(tasks, EmptyTask{})
 		}
 		c.Add(Job{
 			Uuid:     uuid.New(),
