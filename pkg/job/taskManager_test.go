@@ -15,36 +15,3 @@
  */
 
 package job
-
-import (
-	"strconv"
-	"time"
-)
-
-func NewRunnerConfig() RunnerConfig {
-	c := RunnerConfig{
-		maxConcurrentJobs:     10,
-		idleDelayMilliseconds: 250,
-	}
-	return c
-}
-
-type RunnerConfig struct {
-	maxConcurrentJobs     int
-	idleDelayMilliseconds int
-}
-
-func (c RunnerConfig) WithMaxJobs(max int) RunnerConfig {
-	c.maxConcurrentJobs = max
-	return c
-}
-
-func (c RunnerConfig) WithIdleDelay(milliseconds int) RunnerConfig {
-	c.idleDelayMilliseconds = milliseconds
-	return c
-}
-
-func (c RunnerConfig) GetIdleDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.idleDelayMilliseconds) + "ms")
-	return d
-}

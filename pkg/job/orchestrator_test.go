@@ -34,21 +34,20 @@ func TestNewOrchestrator(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	c := NewMemoryCatalog()
-	NewOrchestrator(ctx, oc, c)
+	_, err := NewOrchestrator(ctx, oc, c)
+	if err != nil {
+		t.Errorf("got error: %s", err.Error())
+	}
 
 	schedule, _ := cron.NewSchedule("@everysecond")
 	for i := 0; i < 100; i++ {
-		var tasks []TaskRunner
-		for j := 0; j < 5; j++ {
-			tasks = append(tasks, EmptyTask{})
-		}
 		c.Add(Job{
 			Uuid:     uuid.New(),
 			Enabled:  true,
 			Status:   StatusNone,
 			Schedule: schedule,
 			Name:     strconv.Itoa(i),
-			Tasks:    tasks,
+			Tasks:    TaskSequence{},
 		})
 	}
 

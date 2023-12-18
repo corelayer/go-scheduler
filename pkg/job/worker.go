@@ -18,12 +18,35 @@ package job
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 )
 
-func NewWorker(ctx context.Context, id int, chInput chan Job) *Worker {
+func NewWorkerConfig(id int, r *TaskHandlerRepository) (WorkerConfig, error) {
+	if r == nil {
+		return WorkerConfig{}, fmt.Errorf("invalid repository")
+	}
+	return WorkerConfig{
+		id:                    id,
+		taskHandlerRepository: r,
+	}, nil
+}
+
+type WorkerConfig struct {
+	id                        int
+	taskHandlerRepository     *TaskHandlerRepository
+	idleSleepTimeMilliseconds int
+}
+
+func (c *WorkerConfig) GetIdleDelay() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.idleSleepTimeMilliseconds) + "ms")
+	return d
+}
+
+func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job) *Worker {
 	w := &Worker{
-		id:      id,
+		config:  config,
 		chInput: chInput,
 	}
 	go w.processJob(ctx)
@@ -31,7 +54,7 @@ func NewWorker(ctx context.Context, id int, chInput chan Job) *Worker {
 }
 
 type Worker struct {
-	id      int
+	config  WorkerConfig
 	chInput chan Job
 }
 
@@ -45,12 +68,15 @@ func (w *Worker) processJob(ctx context.Context) {
 				return
 			}
 			job.Status = StatusInProgress
-			for _, t := range job.Tasks {
-				t.Execute()
-			}
+			// for i, t := range job.Tasks {
+			// 	// TODO processJob: check if TaskHandlerRepository is nil?
+			// 	if w.config.TaskHandlerRepository == nil {
+			// 		continue
+			// 	}
+			// 	job.Tasks[i] = w.config.TaskHandlerRepository.Execute(t)
+			// }
 		default:
-			// fmt.Println("Waiting for jobs to be processed by worker", w.id)
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(w.config.GetIdleDelay())
 		}
 	}
 }

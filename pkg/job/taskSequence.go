@@ -16,35 +16,31 @@
 
 package job
 
-import (
-	"strconv"
-	"time"
-)
-
-func NewRunnerConfig() RunnerConfig {
-	c := RunnerConfig{
-		maxConcurrentJobs:     10,
-		idleDelayMilliseconds: 250,
+func NewTaskSequence(tasks []Task) TaskSequence {
+	return TaskSequence{
+		tasks: tasks,
 	}
-	return c
 }
 
-type RunnerConfig struct {
-	maxConcurrentJobs     int
-	idleDelayMilliseconds int
+type TaskSequence struct {
+	pipeline chan interface{}
+	tasks    []Task
 }
 
-func (c RunnerConfig) WithMaxJobs(max int) RunnerConfig {
-	c.maxConcurrentJobs = max
-	return c
+func (s TaskSequence) RegisterTask(t Task) TaskSequence {
+	s.tasks = append(s.tasks, t)
+	return s
 }
 
-func (c RunnerConfig) WithIdleDelay(milliseconds int) RunnerConfig {
-	c.idleDelayMilliseconds = milliseconds
-	return c
+func (s TaskSequence) RegisterTasks(t []Task) TaskSequence {
+	s.tasks = append(s.tasks, t...)
+	return s
 }
 
-func (c RunnerConfig) GetIdleDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.idleDelayMilliseconds) + "ms")
-	return d
+func (s TaskSequence) Run(manager *TaskHandlerRepository) {
+	p := make(chan interface{})
+	defer close(p)
+	for i, t := range s.tasks {
+		s.tasks[i] = manager.RunTask(t, p)
+	}
 }

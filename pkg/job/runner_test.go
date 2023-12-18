@@ -15,23 +15,3 @@
  */
 
 package job
-
-import "fmt"
-
-type TaskRunner interface {
-	Execute()
-}
-
-type PrintTask struct {
-	message string
-}
-
-func (t PrintTask) Execute() {
-	fmt.Printf("%s\r\n", t.message)
-}
-
-type EmptyTask struct{}
-
-func (t EmptyTask) Execute() {
-	return
-}

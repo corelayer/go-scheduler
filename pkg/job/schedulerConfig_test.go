@@ -24,7 +24,7 @@ import (
 func TestNewSchedulerConfig(t *testing.T) {
 	c := NewSchedulerConfig()
 
-	if c.MaxSchedulableJobs != 10 {
+	if c.maxSchedulableJobs != 10 {
 		t.Errorf("expected default scheduler config")
 	}
 }
@@ -38,8 +38,8 @@ func TestSchedulerConfig_GetNoJobsSchedulableDelay(t *testing.T) {
 	c := NewSchedulerConfig()
 	d, _ := time.ParseDuration("2ms")
 
-	if d != c.GetNoSchedulableJobsDelayDuration() {
-		t.Errorf("expected 2ms duration, got %s", c.GetNoSchedulableJobsDelayDuration().String())
+	if d != c.GetIdleDelayDuration() {
+		t.Errorf("expected 2ms duration, got %s", c.GetIdleDelayDuration().String())
 	}
 }
 

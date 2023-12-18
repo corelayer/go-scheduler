@@ -18,17 +18,22 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
-func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogReadWriter) *Scheduler {
+func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogReadWriter) (*Scheduler, error) {
+	if catalog == nil {
+		return nil, fmt.Errorf("invalid catalog")
+	}
+
 	s := &Scheduler{
 		config:  config,
 		catalog: catalog,
 	}
 	go s.schedule(ctx)
 	go s.verifySchedule(ctx)
-	return s
+	return s, nil
 }
 
 type Scheduler struct {
@@ -43,9 +48,9 @@ func (s *Scheduler) schedule(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			jobs := s.catalog.GetDueJobs(s.config.MaxSchedulableJobs)
+			jobs := s.catalog.GetDueJobs(s.config.maxSchedulableJobs)
 			if len(jobs) == 0 {
-				time.Sleep(s.config.GetNoSchedulableJobsDelayDuration())
+				time.Sleep(s.config.GetIdleDelayDuration())
 				continue
 			}
 			for _, job := range jobs {
@@ -65,7 +70,7 @@ func (s *Scheduler) verifySchedule(ctx context.Context) {
 			time.Sleep(s.config.GetScheduleDelayDuration())
 			jobs := s.catalog.GetNotSchedulableJobs()
 			if len(jobs) == 0 {
-				time.Sleep(s.config.GetNoSchedulableJobsDelayDuration())
+				time.Sleep(s.config.GetIdleDelayDuration())
 				continue
 			}
 			for _, job := range jobs {

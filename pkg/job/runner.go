@@ -18,27 +18,34 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
-func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWriter) *Runner {
+func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWriter) (*Runner, error) {
+	if catalog == nil {
+		return nil, fmt.Errorf("invalid catalog")
+	}
+
 	r := &Runner{
 		config:        config,
 		catalog:       catalog,
 		queue:         NewMemoryQueue(),
 		chWorkerInput: make(chan Job),
-		// chWorkerOutput: make(chan Job, config.MaxConcurrentJobs),
 	}
 
-	workers := make([]*Worker, config.MaxConcurrentJobs)
-	for i := 0; i < config.MaxConcurrentJobs; i++ {
-		workers[i] = NewWorker(ctx, i, r.chWorkerInput)
+	workers := make([]*Worker, config.maxConcurrentJobs)
+	for i := 0; i < config.maxConcurrentJobs; i++ {
+		workers[i] = NewWorker(ctx, WorkerConfig{
+			id:                        i,
+			idleSleepTimeMilliseconds: 10,
+		}, r.chWorkerInput)
 	}
 	r.workers = workers
 
 	go r.queueJobs(ctx)
 	go r.runJobs(ctx)
-	return r
+	return r, nil
 
 }
 
@@ -57,22 +64,20 @@ func (r *Runner) queueJobs(ctx context.Context) {
 			return
 		default:
 			ql := r.queue.Length()
-			if ql >= r.config.MaxConcurrentJobs {
-				// fmt.Println("Waiting for space in the queue:", ql)
-				time.Sleep(r.config.GetNoRunnableJobsDelayDuration())
+			if ql >= r.config.maxConcurrentJobs {
+				time.Sleep(r.config.GetIdleDelayDuration())
 				continue
 			}
 
 			jobs := r.catalog.GetRunnableJobs(1)
 			if len(jobs) == 0 {
-				// fmt.Println("Waiting for runnable jobs in catalog")
-				time.Sleep(r.config.GetNoRunnableJobsDelayDuration())
+				time.Sleep(r.config.GetIdleDelayDuration())
 				continue
 			}
 			for _, job := range jobs {
 				job.Status = StatusScheduled
 				r.catalog.Update(job)
-				// fmt.Println("Adding job to queue:", job.Name)
+				// Add job to worker queue
 				r.queue.Push(job)
 			}
 
@@ -88,7 +93,7 @@ func (r *Runner) runJobs(ctx context.Context) {
 		default:
 			job, err := r.queue.Pop()
 			if err != nil {
-				time.Sleep(r.config.GetNoRunnableJobsDelayDuration())
+				time.Sleep(r.config.GetIdleDelayDuration())
 				continue
 			}
 
@@ -98,7 +103,6 @@ func (r *Runner) runJobs(ctx context.Context) {
 			sent := false
 			for {
 				if sent {
-					// fmt.Printf("Job %s sent to worker\r\n", job.Name)
 					break
 				}
 				select {

@@ -30,7 +30,7 @@ type Job struct {
 	Status   Status
 	Schedule cron.Schedule
 	Name     string
-	Tasks    []TaskRunner
+	Tasks    TaskSequence
 }
 
 func (j *Job) IsDue() bool {

@@ -37,6 +37,7 @@ func (q *MemoryQueue) Length() int {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	return len(q.jobs)
+
 }
 func (q *MemoryQueue) Capacity() int {
 	q.mux.Lock()

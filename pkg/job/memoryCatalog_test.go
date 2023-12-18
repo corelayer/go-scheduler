@@ -45,7 +45,7 @@ func TestMemoryCatalog_Add(t *testing.T) {
 	r.Add(Job{
 		Uuid:   uuid.New(),
 		Name:   "test",
-		Tasks:  nil,
+		Tasks:  TaskSequence{},
 		Status: StatusNone,
 	})
 }
@@ -76,7 +76,7 @@ func TestMemoryCatalog_Schedulable(t *testing.T) {
 		r.Add(Job{
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
-			Tasks:   nil,
+			Tasks:   TaskSequence{},
 			Status:  StatusIsDue,
 			Enabled: true,
 		})
@@ -96,7 +96,7 @@ func TestMemoryCatalog_Schedulable2(t *testing.T) {
 		r.Add(Job{
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
-			Tasks:   nil,
+			Tasks:   TaskSequence{},
 			Status:  StatusIsDue,
 			Enabled: true,
 		})
@@ -117,14 +117,14 @@ func TestMemoryCatalog_Update(t *testing.T) {
 	r.jobs[id] = Job{
 		Uuid:   id,
 		Name:   "test1",
-		Tasks:  nil,
+		Tasks:  TaskSequence{},
 		Status: StatusNone,
 	}
 
 	r.Update(Job{
 		Uuid:   id,
 		Name:   "testUpdated",
-		Tasks:  nil,
+		Tasks:  TaskSequence{},
 		Status: StatusCompleted,
 	})
 
@@ -145,14 +145,14 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 	r.jobs[uuid1] = Job{
 		Uuid:   uuid1,
 		Name:   "test1",
-		Tasks:  nil,
+		Tasks:  TaskSequence{},
 		Status: StatusNone,
 	}
 
 	r.Update(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
-		Tasks:  nil,
+		Tasks:  TaskSequence{},
 		Status: StatusCompleted,
 	})
 
@@ -216,7 +216,7 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 		r.Add(Job{
 			Uuid:     id[i],
 			Name:     "testJob",
-			Tasks:    nil,
+			Tasks:    TaskSequence{},
 			Status:   StatusNone,
 			Schedule: s,
 			Enabled:  false,
@@ -232,7 +232,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 	r.Add(Job{
 		Uuid:     id,
 		Name:     "testJob",
-		Tasks:    nil,
+		Tasks:    TaskSequence{},
 		Status:   StatusNone,
 		Schedule: s,
 		Enabled:  false,
@@ -243,7 +243,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 		r.Update(Job{
 			Uuid:   id,
 			Name:   "a",
-			Tasks:  nil,
+			Tasks:  TaskSequence{},
 			Status: StatusStarted,
 		})
 	}

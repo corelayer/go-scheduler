@@ -26,18 +26,21 @@ import (
 
 func TestNewScheduler(t *testing.T) {
 	ctx := context.Background()
-	c := SchedulerConfig{StartDelayMilliseconds: 5}
+	c := SchedulerConfig{startDelayMilliseconds: 5}
 	r := NewMemoryCatalog()
 
 	for i := 0; i < 10; i++ {
 		r.Add(Job{
 			Uuid:   uuid.New(),
 			Name:   strconv.Itoa(i),
-			Tasks:  nil,
+			Tasks:  TaskSequence{},
 			Status: StatusNone,
 		})
 	}
-	s := NewScheduler(ctx, c, r)
+	s, err := NewScheduler(ctx, c, r)
+	if err != nil {
+		t.Errorf("got error: %s", err.Error())
+	}
 
 	result := len(s.catalog.GetNotSchedulableJobs())
 	wanted := 10
@@ -49,7 +52,7 @@ func TestNewScheduler(t *testing.T) {
 
 func TestNewScheduler2(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	c := SchedulerConfig{StartDelayMilliseconds: 5}
+	c := SchedulerConfig{startDelayMilliseconds: 5}
 	NewScheduler(ctx, c, NewMemoryCatalog())
 
 	cancel()
@@ -58,9 +61,12 @@ func TestNewScheduler2(t *testing.T) {
 func TestNewScheduler3(t *testing.T) {
 	ctx := context.Background()
 	c := NewSchedulerConfig()
-	s := NewScheduler(ctx, c, NewMemoryCatalog())
+	s, err := NewScheduler(ctx, c, NewMemoryCatalog())
+	if err != nil {
+		t.Errorf("got error: %s", err.Error())
+	}
 
-	jobs := s.catalog.GetDueJobs(c.MaxSchedulableJobs)
+	jobs := s.catalog.GetDueJobs(c.maxSchedulableJobs)
 
 	result := len(jobs)
 	wanted := 0
@@ -78,14 +84,17 @@ func TestNewScheduler4(t *testing.T) {
 			Uuid:    uuid.New(),
 			Name:    strconv.Itoa(i),
 			Enabled: true,
-			Tasks:   nil,
+			Tasks:   TaskSequence{},
 			Status:  StatusIsDue,
 		})
 	}
 	c := NewSchedulerConfig()
-	s := NewScheduler(ctx, c, r)
+	s, err := NewScheduler(ctx, c, r)
+	if err != nil {
+		t.Errorf("got error: %s", err.Error())
+	}
 
-	jobs := s.catalog.GetDueJobs(c.MaxSchedulableJobs)
+	jobs := s.catalog.GetDueJobs(c.maxSchedulableJobs)
 
 	result := len(jobs)
 	wanted := 10
@@ -93,7 +102,7 @@ func TestNewScheduler4(t *testing.T) {
 		t.Errorf("found %d schedulable catalog, expected %d", result, wanted)
 	}
 
-	jobs2 := s.catalog.GetDueJobs(c.MaxSchedulableJobs)
+	jobs2 := s.catalog.GetDueJobs(c.maxSchedulableJobs)
 
 	result2 := len(jobs2)
 	wanted2 := 10

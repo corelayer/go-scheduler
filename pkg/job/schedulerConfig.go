@@ -23,36 +23,51 @@ import (
 
 func NewSchedulerConfig() SchedulerConfig {
 	return SchedulerConfig{
-		StartDelayMilliseconds:             1,
-		ScheduleDelayMilliseconds:          1,
-		NoSchedulableJobsDelayMilliseconds: 2,
-		MaxSchedulableJobs:                 10,
+		startDelayMilliseconds:    1,
+		scheduleDelayMilliseconds: 1,
+		idleDelayMilliseconds:     2,
+		maxSchedulableJobs:        10,
 	}
 }
 
 type SchedulerConfig struct {
-	StartDelayMilliseconds             int
-	ScheduleDelayMilliseconds          int
-	NoSchedulableJobsDelayMilliseconds int
-	MaxSchedulableJobs                 int
+	startDelayMilliseconds    int
+	scheduleDelayMilliseconds int
+	idleDelayMilliseconds     int
+	maxSchedulableJobs        int
+}
+
+func (c SchedulerConfig) WithStartDelay(milliseconds int) SchedulerConfig {
+	c.startDelayMilliseconds = milliseconds
+	return c
+}
+
+func (c SchedulerConfig) WithScheduleDelay(milliseconds int) SchedulerConfig {
+	c.scheduleDelayMilliseconds = milliseconds
+	return c
+}
+
+func (c SchedulerConfig) WithIdleDelay(milliseconds int) SchedulerConfig {
+	c.idleDelayMilliseconds = milliseconds
+	return c
 }
 
 func (c SchedulerConfig) WithMaxJobs(max int) SchedulerConfig {
-	c.MaxSchedulableJobs = max
+	c.maxSchedulableJobs = max
 	return c
 }
 
 func (c SchedulerConfig) GetStartDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.StartDelayMilliseconds) + "ms")
+	d, _ := time.ParseDuration(strconv.Itoa(c.startDelayMilliseconds) + "ms")
 	return d
 }
 
 func (c SchedulerConfig) GetScheduleDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelayMilliseconds) + "ms")
+	d, _ := time.ParseDuration(strconv.Itoa(c.scheduleDelayMilliseconds) + "ms")
 	return d
 }
 
-func (c SchedulerConfig) GetNoSchedulableJobsDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.NoSchedulableJobsDelayMilliseconds) + "ms")
+func (c SchedulerConfig) GetIdleDelayDuration() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.idleDelayMilliseconds) + "ms")
 	return d
 }
