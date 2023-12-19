@@ -16,31 +16,16 @@
 
 package job
 
-func NewTaskSequence(tasks []Task) TaskSequence {
-	return TaskSequence{
-		Tasks: tasks,
+func NewOrchestratorConfig(maxJobs int, r *TaskHandlerRepository) OrchestratorConfig {
+	return OrchestratorConfig{
+		MaxJobs:         maxJobs,
+		SchedulerConfig: SchedulerConfig{}.WithMaxJobs(maxJobs),
+		RunnerConfig:    NewRunnerConfig(r).WithMaxJobs(maxJobs),
 	}
 }
 
-type TaskSequence struct {
-	pipeline chan interface{}
-	Tasks    []Task
-}
-
-func (s TaskSequence) RegisterTask(t Task) TaskSequence {
-	s.Tasks = append(s.Tasks, t)
-	return s
-}
-
-func (s TaskSequence) RegisterTasks(t []Task) TaskSequence {
-	s.Tasks = append(s.Tasks, t...)
-	return s
-}
-
-func (s TaskSequence) Run(r *TaskHandlerRepository) {
-	p := make(chan interface{})
-	defer close(p)
-	for i, t := range s.Tasks {
-		s.Tasks[i] = r.Execute(t, p)
-	}
+type OrchestratorConfig struct {
+	MaxJobs         int
+	SchedulerConfig SchedulerConfig
+	RunnerConfig    RunnerConfig
 }

@@ -32,10 +32,11 @@ func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWrit
 	}
 
 	r := &Runner{
-		config:        config,
-		catalog:       catalog,
-		queue:         NewMemoryQueue(),
-		chWorkerInput: make(chan Job),
+		config:         config,
+		catalog:        catalog,
+		queue:          NewMemoryQueue(),
+		chWorkerInput:  make(chan Job),
+		chWorkerOutput: make(chan Job),
 	}
 
 	workers := make([]*Worker, config.maxConcurrentJobs)
@@ -45,7 +46,7 @@ func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWrit
 			id:                        i,
 			idleSleepTimeMilliseconds: 10,
 			taskHandlerRepository:     config.taskHandlerRepository,
-		}, r.chWorkerInput)
+		}, r.chWorkerInput, r.chWorkerOutput)
 
 		if err != nil {
 			return nil, err
@@ -55,16 +56,18 @@ func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWrit
 
 	go r.queueJobs(ctx)
 	go r.runJobs(ctx)
+	go r.processOutput(ctx)
 	return r, nil
 
 }
 
 type Runner struct {
-	config        RunnerConfig
-	catalog       CatalogReadWriter
-	queue         Queue
-	workers       []*Worker
-	chWorkerInput chan Job
+	config         RunnerConfig
+	catalog        CatalogReadWriter
+	queue          Queue
+	workers        []*Worker
+	chWorkerInput  chan Job
+	chWorkerOutput chan Job
 }
 
 func (r *Runner) queueJobs(ctx context.Context) {
@@ -120,6 +123,18 @@ func (r *Runner) runJobs(ctx context.Context) {
 					sent = true
 				}
 			}
+		}
+	}
+}
+
+func (r *Runner) processOutput(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case job := <-r.chWorkerOutput:
+			r.catalog.Update(job)
+		default:
 		}
 	}
 }

@@ -44,10 +44,11 @@ func (c *WorkerConfig) GetIdleDelay() time.Duration {
 	return d
 }
 
-func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job) (*Worker, error) {
+func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job, chOutput chan Job) (*Worker, error) {
 	w := &Worker{
-		config:  config,
-		chInput: chInput,
+		config:   config,
+		chInput:  chInput,
+		chOutput: chOutput,
 	}
 
 	if config.taskHandlerRepository == nil {
@@ -58,8 +59,9 @@ func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job) (*Wor
 }
 
 type Worker struct {
-	config  WorkerConfig
-	chInput chan Job
+	config   WorkerConfig
+	chInput  chan Job
+	chOutput chan Job
 }
 
 func (w *Worker) processJob(ctx context.Context) {
@@ -72,7 +74,10 @@ func (w *Worker) processJob(ctx context.Context) {
 				return
 			}
 			job.Status = StatusInProgress
+			w.chOutput <- job
 			job.Tasks.Run(w.config.taskHandlerRepository)
+			job.Status = StatusCompleted
+			w.chOutput <- job
 		default:
 			time.Sleep(w.config.GetIdleDelay())
 		}

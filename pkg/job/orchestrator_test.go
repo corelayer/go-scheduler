@@ -29,13 +29,14 @@ import (
 
 func TestNewOrchestrator(t *testing.T) {
 	oc := OrchestratorConfig{
-		MaxJobs: 10,
+		MaxJobs:         10,
+		SchedulerConfig: NewSchedulerConfig(),
+		RunnerConfig:    NewRunnerConfig(&TaskHandlerRepository{}),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	c := NewMemoryCatalog()
-	thr := &TaskHandlerRepository{}
-	_, err := NewOrchestrator(ctx, oc, c, thr)
+	_, err := NewOrchestrator(ctx, oc, c)
 	if err != nil {
 		t.Errorf("got error: %s", err.Error())
 	}

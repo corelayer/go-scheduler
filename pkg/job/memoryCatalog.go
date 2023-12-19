@@ -35,6 +35,17 @@ type MemoryCatalog struct {
 	mux  sync.Mutex
 }
 
+func (c *MemoryCatalog) GetAllJobs() []Job {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	var jobs = make([]Job, 0)
+	for _, job := range c.jobs {
+		jobs = append(jobs, job)
+	}
+
+	return jobs
+}
+
 func (c *MemoryCatalog) GetNotSchedulableJobs() []Job {
 	var jobs = make([]Job, 0)
 
