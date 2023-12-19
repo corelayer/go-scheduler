@@ -16,31 +16,22 @@
 
 package job
 
-func NewTaskSequence(tasks []Task) TaskSequence {
-	return TaskSequence{
-		tasks: tasks,
+import "reflect"
+
+func NewTaskHandlerRepository() *TaskHandlerRepository {
+	return &TaskHandlerRepository{
+		handlerPool: make(map[reflect.Type]*TaskHandlerPool),
 	}
 }
 
-type TaskSequence struct {
-	pipeline chan interface{}
-	tasks    []Task
+type TaskHandlerRepository struct {
+	handlerPool map[reflect.Type]*TaskHandlerPool
 }
 
-func (s TaskSequence) RegisterTask(t Task) TaskSequence {
-	s.tasks = append(s.tasks, t)
-	return s
+func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
+	r.handlerPool[p.GetTaskType()] = p
 }
 
-func (s TaskSequence) RegisterTasks(t []Task) TaskSequence {
-	s.tasks = append(s.tasks, t...)
-	return s
-}
-
-func (s TaskSequence) Run(r *TaskHandlerRepository) {
-	p := make(chan interface{})
-	defer close(p)
-	for i, t := range s.tasks {
-		s.tasks[i] = r.Execute(t, p)
-	}
+func (r *TaskHandlerRepository) Execute(t Task, pipeline chan interface{}) Task {
+	return r.handlerPool[reflect.TypeOf(t)].Execute(t, pipeline)
 }

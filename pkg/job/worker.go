@@ -25,7 +25,7 @@ import (
 
 func NewWorkerConfig(id int, r *TaskHandlerRepository) (WorkerConfig, error) {
 	if r == nil {
-		return WorkerConfig{}, fmt.Errorf("invalid repository")
+		return WorkerConfig{}, fmt.Errorf("invalid TaskHandlerRepository")
 	}
 	return WorkerConfig{
 		id:                    id,
@@ -44,13 +44,17 @@ func (c *WorkerConfig) GetIdleDelay() time.Duration {
 	return d
 }
 
-func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job) *Worker {
+func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job) (*Worker, error) {
 	w := &Worker{
 		config:  config,
 		chInput: chInput,
 	}
+
+	if config.taskHandlerRepository == nil {
+		return nil, fmt.Errorf("invalid TaskHandlerRepository in WorkerConfig")
+	}
 	go w.processJob(ctx)
-	return w
+	return w, nil
 }
 
 type Worker struct {
@@ -68,13 +72,7 @@ func (w *Worker) processJob(ctx context.Context) {
 				return
 			}
 			job.Status = StatusInProgress
-			// for i, t := range job.Tasks {
-			// 	// TODO processJob: check if TaskHandlerRepository is nil?
-			// 	if w.config.TaskHandlerRepository == nil {
-			// 		continue
-			// 	}
-			// 	job.Tasks[i] = w.config.TaskHandlerRepository.Execute(t)
-			// }
+			job.Tasks.Run(w.config.taskHandlerRepository)
 		default:
 			time.Sleep(w.config.GetIdleDelay())
 		}

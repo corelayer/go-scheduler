@@ -21,10 +21,11 @@ import (
 	"time"
 )
 
-func NewRunnerConfig() RunnerConfig {
+func NewRunnerConfig(r *TaskHandlerRepository) RunnerConfig {
 	c := RunnerConfig{
 		maxConcurrentJobs:     10,
 		idleDelayMilliseconds: 250,
+		taskHandlerRepository: r,
 	}
 	return c
 }
@@ -32,6 +33,7 @@ func NewRunnerConfig() RunnerConfig {
 type RunnerConfig struct {
 	maxConcurrentJobs     int
 	idleDelayMilliseconds int
+	taskHandlerRepository *TaskHandlerRepository
 }
 
 func (c RunnerConfig) WithMaxJobs(max int) RunnerConfig {

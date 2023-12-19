@@ -50,6 +50,29 @@ func TestMemoryCatalog_Add(t *testing.T) {
 	})
 }
 
+func TestMemoryCatalog_Count(t *testing.T) {
+	r := NewMemoryCatalog()
+
+	uuids := make([]uuid.UUID, 10)
+
+	for i := 0; i < 10; i++ {
+		id := uuid.New()
+		uuids[i] = id
+		r.Add(Job{
+			Uuid: id,
+			Name: strconv.Itoa(i),
+		})
+	}
+
+	result := r.Count()
+	wanted := 10
+
+	if result != wanted {
+		t.Errorf("got %d schedulable jobs, expected %d", result, wanted)
+	}
+
+}
+
 func TestMemoryCatalog_Delete(t *testing.T) {
 	r := NewMemoryCatalog()
 
@@ -85,7 +108,7 @@ func TestMemoryCatalog_Schedulable(t *testing.T) {
 	wanted := 10
 
 	if len(result) != wanted {
-		t.Errorf("got %d schedulable catalog, expected %d", len(result), wanted)
+		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
 	}
 }
 
@@ -106,7 +129,7 @@ func TestMemoryCatalog_Schedulable2(t *testing.T) {
 	wanted := 5
 
 	if len(result) != wanted {
-		t.Errorf("got %d schedulable catalog, expected %d", len(result), wanted)
+		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
 	}
 }
 

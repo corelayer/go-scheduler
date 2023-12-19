@@ -24,19 +24,19 @@ type OrchestratorConfig struct {
 	MaxJobs int
 }
 
-func NewOrchestrator(ctx context.Context, config OrchestratorConfig, catalog CatalogReadWriter) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, c OrchestratorConfig, jobs CatalogReadWriter, t *TaskHandlerRepository) (*Orchestrator, error) {
 	var (
 		err       error
 		scheduler *Scheduler
 		runner    *Runner
 	)
 
-	scheduler, err = NewScheduler(ctx, NewSchedulerConfig().WithMaxJobs(config.MaxJobs), catalog)
+	scheduler, err = NewScheduler(ctx, NewSchedulerConfig().WithMaxJobs(c.MaxJobs), jobs)
 	if err != nil {
 		return nil, err
 	}
 
-	runner, err = NewRunner(ctx, NewRunnerConfig().WithMaxJobs(config.MaxJobs), catalog)
+	runner, err = NewRunner(ctx, NewRunnerConfig(t).WithMaxJobs(c.MaxJobs), jobs)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,6 @@ func NewOrchestrator(ctx context.Context, config OrchestratorConfig, catalog Cat
 }
 
 type Orchestrator struct {
-	// c CatalogReadWriter
 	s *Scheduler
 	r *Runner
 }

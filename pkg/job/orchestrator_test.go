@@ -34,7 +34,8 @@ func TestNewOrchestrator(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	c := NewMemoryCatalog()
-	_, err := NewOrchestrator(ctx, oc, c)
+	thr := &TaskHandlerRepository{}
+	_, err := NewOrchestrator(ctx, oc, c, thr)
 	if err != nil {
 		t.Errorf("got error: %s", err.Error())
 	}

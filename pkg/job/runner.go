@@ -27,6 +27,10 @@ func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWrit
 		return nil, fmt.Errorf("invalid catalog")
 	}
 
+	if config.taskHandlerRepository == nil {
+		return nil, fmt.Errorf("invalid TaskHandlerRepository in RunnerConfig")
+	}
+
 	r := &Runner{
 		config:        config,
 		catalog:       catalog,
@@ -35,11 +39,17 @@ func NewRunner(ctx context.Context, config RunnerConfig, catalog CatalogReadWrit
 	}
 
 	workers := make([]*Worker, config.maxConcurrentJobs)
+	var err error
 	for i := 0; i < config.maxConcurrentJobs; i++ {
-		workers[i] = NewWorker(ctx, WorkerConfig{
+		workers[i], err = NewWorker(ctx, WorkerConfig{
 			id:                        i,
 			idleSleepTimeMilliseconds: 10,
+			taskHandlerRepository:     config.taskHandlerRepository,
 		}, r.chWorkerInput)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 	r.workers = workers
 
