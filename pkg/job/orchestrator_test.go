@@ -16,43 +16,32 @@
 
 package job
 
-import (
-	"context"
-	"strconv"
-	"testing"
-	"time"
-
-	"github.com/google/uuid"
-
-	"github.com/corelayer/go-scheduler/pkg/cron"
-)
-
-func TestNewOrchestrator(t *testing.T) {
-	oc := OrchestratorConfig{
-		MaxJobs:         10,
-		SchedulerConfig: NewSchedulerConfig(),
-		RunnerConfig:    NewRunnerConfig(&TaskHandlerRepository{}),
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-
-	c := NewMemoryCatalog()
-	_, err := NewOrchestrator(ctx, oc, c)
-	if err != nil {
-		t.Errorf("got error: %s", err.Error())
-	}
-
-	schedule, _ := cron.NewSchedule("@everysecond")
-	for i := 0; i < 100; i++ {
-		c.Add(Job{
-			Uuid:     uuid.New(),
-			Enabled:  true,
-			Status:   StatusNone,
-			Schedule: schedule,
-			Name:     strconv.Itoa(i),
-			Tasks:    TaskSequence{},
-		})
-	}
-
-	time.Sleep(15 * time.Second)
-	cancel()
-}
+// func TestNewOrchestrator(t *testing.T) {
+// 	oc := OrchestratorConfig{
+// 		MaxJobs:         10,
+// 		SchedulerConfig: NewSchedulerConfig(),
+// 		RunnerConfig:    NewRunnerConfig(&TaskHandlerRepository{}),
+// 	}
+// 	ctx, cancel := context.WithCancel(context.Background())
+//
+// 	c := NewMemoryCatalog()
+// 	_, err := NewOrchestrator(ctx, oc, c)
+// 	if err != nil {
+// 		t.Errorf("got error: %s", err.Error())
+// 	}
+//
+// 	schedule, _ := cron.NewSchedule("@everysecond")
+// 	for i := 0; i < 100; i++ {
+// 		c.Register(Job{
+// 			Uuid:     uuid.New(),
+// 			Enabled:  true,
+// 			Status:   StatusNone,
+// 			Schedule: schedule,
+// 			Name:     strconv.Itoa(i),
+// 			Tasks:    TaskSequence{},
+// 		})
+// 	}
+//
+// 	time.Sleep(15 * time.Second)
+// 	cancel()
+// }

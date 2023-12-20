@@ -27,19 +27,27 @@ func NewOrchestrator(ctx context.Context, c OrchestratorConfig, jobs CatalogRead
 		runner    *Runner
 	)
 
-	scheduler, err = NewScheduler(ctx, c.SchedulerConfig, jobs)
+	chRunner := make(chan Job, c.MaxJobs)
+	chUpdate := make(chan Job, c.MaxJobs)
+
+	sc := NewSchedulerConfig(c.MaxJobs, chRunner, chUpdate)
+	rc := NewRunnerConfig(c.MaxJobs, c.TaskHandlers, chRunner, chUpdate)
+
+	scheduler, err = NewScheduler(ctx, sc, jobs)
 	if err != nil {
 		return nil, err
 	}
 
-	runner, err = NewRunner(ctx, c.RunnerConfig, jobs)
+	runner, err = NewRunner(ctx, rc)
 	if err != nil {
 		return nil, err
 	}
 
 	o := &Orchestrator{
-		s: scheduler,
-		r: runner,
+		s:        scheduler,
+		r:        runner,
+		chRunner: chRunner,
+		chUpdate: chUpdate,
 	}
 
 	return o, nil
@@ -48,4 +56,7 @@ func NewOrchestrator(ctx context.Context, c OrchestratorConfig, jobs CatalogRead
 type Orchestrator struct {
 	s *Scheduler
 	r *Runner
+
+	chRunner chan Job
+	chUpdate chan Job
 }

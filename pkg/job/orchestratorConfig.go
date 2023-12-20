@@ -18,14 +18,12 @@ package job
 
 func NewOrchestratorConfig(maxJobs int, r *TaskHandlerRepository) OrchestratorConfig {
 	return OrchestratorConfig{
-		MaxJobs:         maxJobs,
-		SchedulerConfig: SchedulerConfig{}.WithMaxJobs(maxJobs),
-		RunnerConfig:    NewRunnerConfig(r).WithMaxJobs(maxJobs),
+		MaxJobs:      maxJobs,
+		TaskHandlers: r,
 	}
 }
 
 type OrchestratorConfig struct {
-	MaxJobs         int
-	SchedulerConfig SchedulerConfig
-	RunnerConfig    RunnerConfig
+	MaxJobs      int
+	TaskHandlers *TaskHandlerRepository
 }

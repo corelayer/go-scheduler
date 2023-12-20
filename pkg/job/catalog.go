@@ -24,15 +24,13 @@ type CatalogReadWriter interface {
 }
 
 type CatalogReader interface {
-	GetNotSchedulableJobs() []Job
-	GetDueJobs(limit int) []Job
-	GetRunnableJobs(limit int) []Job
-	Count() int
+	Archive(job Job)
+	GetActiveJobs() []Job
+	CountRegisteredJobs() int
 }
 
 type CatalogWriter interface {
-	Activate(uuid uuid.UUID)
-	Add(job Job)
-	Update(job Job)
-	Delete(uuid uuid.UUID)
+	Register(job Job)
+	UpdateActiveJob(job Job)
+	Unregister(uuid uuid.UUID)
 }

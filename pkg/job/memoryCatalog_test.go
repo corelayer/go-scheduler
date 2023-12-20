@@ -30,7 +30,7 @@ func TestNewMemoryCatalog(t *testing.T) {
 	r := NewMemoryCatalog()
 
 	r.mux.Lock()
-	result := len(r.jobs)
+	result := len(r.registered)
 	r.mux.Unlock()
 	wanted := 0
 
@@ -42,7 +42,7 @@ func TestNewMemoryCatalog(t *testing.T) {
 func TestMemoryCatalog_Add(t *testing.T) {
 	r := NewMemoryCatalog()
 
-	r.Add(Job{
+	r.Register(Job{
 		Uuid:   uuid.New(),
 		Name:   "test",
 		Tasks:  TaskSequence{},
@@ -58,13 +58,13 @@ func TestMemoryCatalog_Count(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		id := uuid.New()
 		uuids[i] = id
-		r.Add(Job{
+		r.Register(Job{
 			Uuid: id,
 			Name: strconv.Itoa(i),
 		})
 	}
 
-	result := r.Count()
+	result := r.CountRegisteredJobs()
 	wanted := 10
 
 	if result != wanted {
@@ -81,7 +81,7 @@ func TestMemoryCatalog_Delete(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		id := uuid.New()
 		uuids[i] = id
-		r.Add(Job{
+		r.Register(Job{
 			Uuid: id,
 			Name: strconv.Itoa(i),
 		})
@@ -89,62 +89,21 @@ func TestMemoryCatalog_Delete(t *testing.T) {
 
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(9)
-	r.Delete(uuids[d])
-}
-
-func TestMemoryCatalog_Schedulable(t *testing.T) {
-	r := NewMemoryCatalog()
-
-	for i := 0; i < 10; i++ {
-		r.Add(Job{
-			Uuid:    uuid.New(),
-			Name:    strconv.Itoa(i),
-			Tasks:   TaskSequence{},
-			Status:  StatusIsDue,
-			Enabled: true,
-		})
-	}
-	result := r.GetDueJobs(0)
-	wanted := 10
-
-	if len(result) != wanted {
-		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
-	}
-}
-
-func TestMemoryCatalog_Schedulable2(t *testing.T) {
-	r := NewMemoryCatalog()
-
-	for i := 0; i < 10; i++ {
-		r.Add(Job{
-			Uuid:    uuid.New(),
-			Name:    strconv.Itoa(i),
-			Tasks:   TaskSequence{},
-			Status:  StatusIsDue,
-			Enabled: true,
-		})
-	}
-
-	result := r.GetDueJobs(5)
-	wanted := 5
-
-	if len(result) != wanted {
-		t.Errorf("got %d schedulable jobs, expected %d", len(result), wanted)
-	}
+	r.Unregister(uuids[d])
 }
 
 func TestMemoryCatalog_Update(t *testing.T) {
 	r := NewMemoryCatalog()
 
 	id := uuid.New()
-	r.jobs[id] = Job{
+	r.Register(Job{
 		Uuid:   id,
 		Name:   "test1",
 		Tasks:  TaskSequence{},
 		Status: StatusNone,
-	}
+	})
 
-	r.Update(Job{
+	r.UpdateActiveJob(Job{
 		Uuid:   id,
 		Name:   "testUpdated",
 		Tasks:  TaskSequence{},
@@ -152,7 +111,7 @@ func TestMemoryCatalog_Update(t *testing.T) {
 	})
 
 	r.mux.Lock()
-	result := r.jobs[id]
+	result := r.active[id]
 	r.mux.Unlock()
 	wanted := "testUpdated"
 
@@ -165,14 +124,14 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 	r := NewMemoryCatalog()
 
 	uuid1 := uuid.New()
-	r.jobs[uuid1] = Job{
+	r.Register(Job{
 		Uuid:   uuid1,
 		Name:   "test1",
 		Tasks:  TaskSequence{},
 		Status: StatusNone,
-	}
+	})
 
-	r.Update(Job{
+	r.UpdateActiveJob(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
 		Tasks:  TaskSequence{},
@@ -180,7 +139,7 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 	})
 
 	r.mux.Lock()
-	result := r.jobs[uuid1]
+	result := r.active[uuid1]
 	r.mux.Unlock()
 	wanted := "test1"
 
@@ -206,10 +165,10 @@ func TestMemoryCatalog_deleteJob(t *testing.T) {
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(9)
 
-	r.Delete(uuids[d])
+	r.Unregister(uuids[d])
 
 	r.mux.Lock()
-	j := r.jobs
+	j := r.registered
 	r.mux.Unlock()
 
 	stillExists := false
@@ -236,7 +195,7 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r.Add(Job{
+		r.Register(Job{
 			Uuid:     id[i],
 			Name:     "testJob",
 			Tasks:    TaskSequence{},
@@ -252,7 +211,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 	s, _ := cron.NewSchedule("@everysecond")
 
 	id := uuid.New()
-	r.Add(Job{
+	r.Register(Job{
 		Uuid:     id,
 		Name:     "testJob",
 		Tasks:    TaskSequence{},
@@ -263,11 +222,11 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r.Update(Job{
+		r.UpdateActiveJob(Job{
 			Uuid:   id,
 			Name:   "a",
 			Tasks:  TaskSequence{},
-			Status: StatusStarted,
+			Status: StatusPending,
 		})
 	}
 }

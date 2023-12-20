@@ -220,3 +220,27 @@ func TestSchedule_ParseValid(t *testing.T) {
 		})
 	}
 }
+
+func TestSchedule_String(t *testing.T) {
+	var tests = []struct {
+		expression string
+		wanted     string
+	}{
+		{"* * * * *", "* * * * *"},
+		{"* * * * * * *", "* * * * * * *"},
+		{"@everysecond", "* * * * * *"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expression, func(t *testing.T) {
+			s, err := NewSchedule(tt.expression)
+			if err != nil {
+				t.Errorf("invalid expression %s", tt.expression)
+			}
+
+			if s.String() != tt.wanted {
+				t.Errorf("unexpected output for %s, expected %s", tt.expression, tt.wanted)
+			}
+		})
+	}
+}

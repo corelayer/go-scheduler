@@ -28,8 +28,9 @@ func NewWorkerConfig(id int, r *TaskHandlerRepository) (WorkerConfig, error) {
 		return WorkerConfig{}, fmt.Errorf("invalid TaskHandlerRepository")
 	}
 	return WorkerConfig{
-		id:                    id,
-		taskHandlerRepository: r,
+		id:                        id,
+		taskHandlerRepository:     r,
+		idleSleepTimeMilliseconds: 250,
 	}, nil
 }
 
@@ -44,27 +45,27 @@ func (c *WorkerConfig) GetIdleDelay() time.Duration {
 	return d
 }
 
-func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job, chOutput chan Job) (*Worker, error) {
+func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job, chUpdate chan Job) (*Worker, error) {
 	w := &Worker{
-		config:   config,
+		Config:   config,
 		chInput:  chInput,
-		chOutput: chOutput,
+		chUpdate: chUpdate,
 	}
 
 	if config.taskHandlerRepository == nil {
 		return nil, fmt.Errorf("invalid TaskHandlerRepository in WorkerConfig")
 	}
-	go w.processJob(ctx)
+	go w.run(ctx)
 	return w, nil
 }
 
 type Worker struct {
-	config   WorkerConfig
+	Config   WorkerConfig
 	chInput  chan Job
-	chOutput chan Job
+	chUpdate chan Job
 }
 
-func (w *Worker) processJob(ctx context.Context) {
+func (w *Worker) run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -73,13 +74,12 @@ func (w *Worker) processJob(ctx context.Context) {
 			if !ok {
 				return
 			}
-			job.Status = StatusInProgress
-			w.chOutput <- job
-			job.Tasks.Run(w.config.taskHandlerRepository)
-			job.Status = StatusCompleted
-			w.chOutput <- job
-		default:
-			time.Sleep(w.config.GetIdleDelay())
+
+			// Run all tasks for job
+			job.Tasks.Run(w.Config.taskHandlerRepository)
+
+			job.SetStatus(StatusCompleted)
+			w.chUpdate <- job
 		}
 	}
 }

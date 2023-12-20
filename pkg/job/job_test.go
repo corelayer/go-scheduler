@@ -18,40 +18,24 @@ package job
 
 import "testing"
 
-// TODO TestJob_Activate
-func TestJob_Activate(t *testing.T) {
-
-}
-
-func TestJob_IsSchedulable1(t *testing.T) {
+func TestJob_IsPending1(t *testing.T) {
 	j := Job{
 		Enabled: false,
-		Status:  StatusIsDue,
+		Status:  StatusNone,
 	}
 
-	if j.IsSchedulable() {
-		t.Errorf("job is schedulable, expected %s", StatusNone)
-	}
-}
-
-func TestJob_IsSchedulable2(t *testing.T) {
-	j := Job{
-		Enabled: true,
-		Status:  StatusCompleted,
-	}
-
-	if j.IsSchedulable() {
-		t.Errorf("job is schedulable, expected %s", StatusCompleted)
+	if j.IsPending() {
+		t.Errorf("job is pending, expected %s", StatusNone)
 	}
 }
 
-func TestJob_IsSchedulable3(t *testing.T) {
+func TestJob_IsPending2(t *testing.T) {
 	j := Job{
 		Enabled: true,
-		Status:  StatusIsDue,
+		Status:  StatusPending,
 	}
 
-	if !j.IsSchedulable() {
-		t.Errorf("job is not schedulable, expected %s", StatusSchedulable)
+	if !j.IsPending() {
+		t.Errorf("job is %s, expected %s", j.Status, StatusPending)
 	}
 }

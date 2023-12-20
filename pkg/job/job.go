@@ -29,6 +29,7 @@ type Job struct {
 	Enabled  bool
 	Status   Status
 	Schedule cron.Schedule
+	Repeat   bool
 	Name     string
 	Tasks    TaskSequence
 }
@@ -37,16 +38,17 @@ func (j *Job) IsDue() bool {
 	if !j.Enabled {
 		return false
 	}
-	return j.Schedule.IsDue(time.Now())
-}
 
-func (j *Job) IsSchedulable() bool {
-	if !j.Enabled {
-		return false
+	if j.Schedule.IsDue(time.Now()) {
+		return true
 	}
-	return j.Status == StatusIsDue
+	return false
 }
 
-func (j *Job) IsRunnable() bool {
-	return j.Status == StatusSchedulable
+func (j *Job) SetStatus(status Status) {
+	j.Status = status
+}
+
+func (j *Job) IsPending() bool {
+	return j.Status == StatusPending
 }

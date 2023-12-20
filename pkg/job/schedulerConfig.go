@@ -21,53 +21,23 @@ import (
 	"time"
 )
 
-func NewSchedulerConfig() SchedulerConfig {
+func NewSchedulerConfig(maxJobs int, chRunner chan Job, chUpdate chan Job) SchedulerConfig {
 	return SchedulerConfig{
-		startDelayMilliseconds:    1,
-		scheduleDelayMilliseconds: 1,
-		idleDelayMilliseconds:     2,
-		maxSchedulableJobs:        10,
+		ScheduleDelayMilliseconds: 500,
+		MaxJobs:                   maxJobs,
+		chRunner:                  chRunner,
+		chUpdate:                  chUpdate,
 	}
 }
 
 type SchedulerConfig struct {
-	startDelayMilliseconds    int
-	scheduleDelayMilliseconds int
-	idleDelayMilliseconds     int
-	maxSchedulableJobs        int
-}
-
-func (c SchedulerConfig) WithStartDelay(milliseconds int) SchedulerConfig {
-	c.startDelayMilliseconds = milliseconds
-	return c
-}
-
-func (c SchedulerConfig) WithScheduleDelay(milliseconds int) SchedulerConfig {
-	c.scheduleDelayMilliseconds = milliseconds
-	return c
-}
-
-func (c SchedulerConfig) WithIdleDelay(milliseconds int) SchedulerConfig {
-	c.idleDelayMilliseconds = milliseconds
-	return c
-}
-
-func (c SchedulerConfig) WithMaxJobs(max int) SchedulerConfig {
-	c.maxSchedulableJobs = max
-	return c
-}
-
-func (c SchedulerConfig) GetStartDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.startDelayMilliseconds) + "ms")
-	return d
+	ScheduleDelayMilliseconds int
+	MaxJobs                   int
+	chRunner                  chan Job
+	chUpdate                  chan Job
 }
 
 func (c SchedulerConfig) GetScheduleDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.scheduleDelayMilliseconds) + "ms")
-	return d
-}
-
-func (c SchedulerConfig) GetIdleDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.idleDelayMilliseconds) + "ms")
+	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelayMilliseconds) + "ms")
 	return d
 }

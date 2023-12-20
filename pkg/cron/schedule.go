@@ -154,3 +154,7 @@ func (s *Schedule) IsDue(t time.Time) bool {
 	}
 	return o
 }
+
+func (s *Schedule) String() string {
+	return s.expression
+}

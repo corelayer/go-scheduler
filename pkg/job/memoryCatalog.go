@@ -17,112 +17,95 @@
 package job
 
 import (
+	"fmt"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 func NewMemoryCatalog() *MemoryCatalog {
 	r := MemoryCatalog{
-		jobs: make(map[uuid.UUID]Job),
-		mux:  sync.Mutex{},
+		registered: make(map[uuid.UUID]Job),
+		active:     make(map[uuid.UUID]Job),
+		archive:    make([]Job, 0),
+		mux:        sync.Mutex{},
 	}
 	return &r
 }
 
 type MemoryCatalog struct {
-	jobs map[uuid.UUID]Job
-	mux  sync.Mutex
+	registered map[uuid.UUID]Job
+	active     map[uuid.UUID]Job
+	archive    []Job
+	mux        sync.Mutex
 }
 
-func (c *MemoryCatalog) GetAllJobs() []Job {
+// ARCHIVED JOB FUNCTIONS
+func (c *MemoryCatalog) Archive(job Job) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
+
+	// fmt.Printf("Archiving job %s\r\n", job.Name)
+
+	// Append current job instance to archive
+	c.archive = append(c.archive, job)
+
+	// Delete job from active jobs
+	delete(c.active, job.Uuid)
+
+	// Reactivate job if the job must be repeated
+	if c.registered[job.Uuid].Repeat {
+		j := c.registered[job.Uuid]
+		task := PrintTask{Message: strconv.Itoa(time.Now().Minute())}
+		j.Tasks.Tasks[1] = task
+		fmt.Printf("Repeating job %s - status %s\r\n", job.Name, job.Status)
+		c.active[j.Uuid] = j
+	} else {
+		delete(c.registered, job.Uuid)
+	}
+}
+
+// REGISTERED JOB FUNCTIONS
+func (c *MemoryCatalog) CountRegisteredJobs() int {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	return len(c.registered)
+}
+
+func (c *MemoryCatalog) Register(job Job) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.registered[job.Uuid] = job
+	c.active[job.Uuid] = job
+}
+
+func (c *MemoryCatalog) Unregister(uuid uuid.UUID) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	delete(c.registered, uuid)
+}
+
+// ACTIVE JOB FUNCTIONS
+func (c *MemoryCatalog) GetActiveJobs() []Job {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	var jobs = make([]Job, 0)
-	for _, job := range c.jobs {
+	for _, job := range c.active {
 		jobs = append(jobs, job)
 	}
-
 	return jobs
 }
 
-func (c *MemoryCatalog) GetNotSchedulableJobs() []Job {
-	var jobs = make([]Job, 0)
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	for _, job := range c.jobs {
-		if !job.IsSchedulable() {
-			jobs = append(jobs, job)
-		}
-	}
-	return jobs
-}
-
-func (c *MemoryCatalog) Count() int {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	return len(c.jobs)
-}
-
-func (c *MemoryCatalog) GetDueJobs(limit int) []Job {
-	var output = make([]Job, 0)
-
+func (c *MemoryCatalog) UpdateActiveJob(job Job) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	for _, job := range c.jobs {
-		if job.IsSchedulable() {
-			output = append(output, job)
-		}
-		if limit > 0 && len(output) == limit {
-			break
-		}
-	}
-
-	return output
-}
-
-func (c *MemoryCatalog) GetRunnableJobs(limit int) []Job {
-	var output = make([]Job, 0)
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	for _, job := range c.jobs {
-		if job.IsRunnable() {
-			output = append(output, job)
-		}
-		if limit > 0 && len(output) == limit {
-			break
-		}
-	}
-
-	return output
-}
-
-func (c *MemoryCatalog) Activate(uuid uuid.UUID) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	job := c.jobs[uuid]
-	job.Status = StatusIsDue
-	c.jobs[uuid] = job
-}
-
-func (c *MemoryCatalog) Add(job Job) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	c.jobs[job.Uuid] = job
-}
-
-func (c *MemoryCatalog) Delete(uuid uuid.UUID) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	delete(c.jobs, uuid)
-}
-
-func (c *MemoryCatalog) Update(job Job) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	c.jobs[job.Uuid] = job
+	// fmt.Printf("Updating job \"%s\" - status \"%s\"\r\n", job.Name, job.Status)
+	c.active[job.Uuid] = job
 }

@@ -31,8 +31,7 @@ func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogRe
 		config:  config,
 		catalog: catalog,
 	}
-	go s.schedule(ctx)
-	go s.verifySchedule(ctx)
+	go s.run(ctx)
 	return s, nil
 }
 
@@ -41,43 +40,35 @@ type Scheduler struct {
 	catalog CatalogReadWriter
 }
 
-func (s *Scheduler) schedule(ctx context.Context) {
-	time.Sleep(s.config.GetStartDelayDuration())
+func (s *Scheduler) run(ctx context.Context) {
+	queued := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case job := <-s.config.chUpdate:
+			if job.Status == StatusCompleted {
+				queued--
+				s.catalog.Archive(job)
+			} else {
+				s.catalog.UpdateActiveJob(job)
+			}
 		default:
-			jobs := s.catalog.GetDueJobs(s.config.maxSchedulableJobs)
-			if len(jobs) == 0 {
-				time.Sleep(s.config.GetIdleDelayDuration())
-				continue
-			}
+			jobs := s.catalog.GetActiveJobs()
 			for _, job := range jobs {
-				job.Status = StatusSchedulable
-				s.catalog.Update(job)
-			}
-		}
-	}
-}
+				if queued < s.config.MaxJobs {
+					if job.Status == StatusNone && job.IsDue() {
+						job.SetStatus(StatusPending)
+						s.catalog.UpdateActiveJob(job)
 
-func (s *Scheduler) verifySchedule(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			time.Sleep(s.config.GetScheduleDelayDuration())
-			jobs := s.catalog.GetNotSchedulableJobs()
-			if len(jobs) == 0 {
-				time.Sleep(s.config.GetIdleDelayDuration())
-				continue
-			}
-			for _, job := range jobs {
-				if job.Status == StatusNone && job.IsDue() {
-					s.catalog.Activate(job.Uuid)
+						s.config.chRunner <- job
+						queued++
+					}
+				} else {
+					break
 				}
 			}
+			time.Sleep(s.config.GetScheduleDelayDuration())
 		}
 	}
 }
