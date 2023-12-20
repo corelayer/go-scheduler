@@ -49,11 +49,12 @@ func (s *Scheduler) run(ctx context.Context) {
 		case job := <-s.config.chUpdate:
 			if job.Status == StatusCompleted {
 				queued--
-				s.catalog.Archive(job)
-			} else {
-				s.catalog.UpdateActiveJob(job)
+				// s.catalog.Archive(job)
+				// }
 			}
+			s.catalog.UpdateActiveJob(job)
 		default:
+			time.Sleep(s.config.GetScheduleDelayDuration())
 			jobs := s.catalog.GetActiveJobs()
 			for _, job := range jobs {
 				if queued < s.config.MaxJobs {
@@ -68,7 +69,6 @@ func (s *Scheduler) run(ctx context.Context) {
 					break
 				}
 			}
-			time.Sleep(s.config.GetScheduleDelayDuration())
 		}
 	}
 }

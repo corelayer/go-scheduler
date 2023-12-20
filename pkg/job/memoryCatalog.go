@@ -17,10 +17,7 @@
 package job
 
 import (
-	"fmt"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -40,31 +37,6 @@ type MemoryCatalog struct {
 	active     map[uuid.UUID]Job
 	archive    []Job
 	mux        sync.Mutex
-}
-
-// ARCHIVED JOB FUNCTIONS
-func (c *MemoryCatalog) Archive(job Job) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	// fmt.Printf("Archiving job %s\r\n", job.Name)
-
-	// Append current job instance to archive
-	c.archive = append(c.archive, job)
-
-	// Delete job from active jobs
-	delete(c.active, job.Uuid)
-
-	// Reactivate job if the job must be repeated
-	if c.registered[job.Uuid].Repeat {
-		j := c.registered[job.Uuid]
-		task := PrintTask{Message: strconv.Itoa(time.Now().Minute())}
-		j.Tasks.Tasks[1] = task
-		fmt.Printf("Repeating job %s - status %s\r\n", job.Name, job.Status)
-		c.active[j.Uuid] = j
-	} else {
-		delete(c.registered, job.Uuid)
-	}
 }
 
 // REGISTERED JOB FUNCTIONS
@@ -107,5 +79,25 @@ func (c *MemoryCatalog) UpdateActiveJob(job Job) {
 	defer c.mux.Unlock()
 
 	// fmt.Printf("Updating job \"%s\" - status \"%s\"\r\n", job.Name, job.Status)
-	c.active[job.Uuid] = job
+	if job.Status == StatusCompleted {
+		// Copy job to archive
+		c.archive = append(c.archive, job)
+
+		// Delete job from active jobs
+		delete(c.active, job.Uuid)
+
+		// Reactivate job if the job must be repeated, delete from repository if not
+		if c.registered[job.Uuid].Repeat {
+			// j := c.registered[job.Uuid]
+			// task := PrintTask{Message: "##### " + strconv.Itoa(time.Now().Minute())}
+			// j.Tasks.Tasks[1] = task
+			// fmt.Printf("### Adding repeating job %s - status %s\r\n", j.Name, j.Status)
+			// c.active[j.Uuid] = j
+			c.active[job.Uuid] = c.registered[job.Uuid]
+		} else {
+			delete(c.registered, job.Uuid)
+		}
+	} else {
+		c.active[job.Uuid] = job
+	}
 }

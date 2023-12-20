@@ -24,7 +24,6 @@ type CatalogReadWriter interface {
 }
 
 type CatalogReader interface {
-	Archive(job Job)
 	GetActiveJobs() []Job
 	CountRegisteredJobs() int
 }

@@ -107,7 +107,7 @@ func TestMemoryCatalog_Update(t *testing.T) {
 		Uuid:   id,
 		Name:   "testUpdated",
 		Tasks:  TaskSequence{},
-		Status: StatusCompleted,
+		Status: StatusPending,
 	})
 
 	r.mux.Lock()

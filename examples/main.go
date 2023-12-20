@@ -89,7 +89,7 @@ func createJob(i int) job.Job {
 
 func createRepeatableJob(i int) job.Job {
 	id, _ := uuid.NewUUID()
-	schedule, _ := cron.NewSchedule("* * * * *")
+	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(1000)
 	tasks := []job.Task{
@@ -112,7 +112,7 @@ func createRepeatableJob(i int) job.Job {
 		Status:   job.StatusNone,
 		Schedule: schedule,
 		Repeat:   true,
-		Name:     "Repeatable job " + strconv.Itoa(i),
+		Name:     "### Repeatable job " + strconv.Itoa(i),
 		Tasks:    job.NewTaskSequence(tasks),
 	}
 }
@@ -123,7 +123,7 @@ func main() {
 	for i := 0; i < 3000; i++ {
 		c.Register(createJob(i))
 	}
-	// c.Register(createRepeatableJob(1))
+	c.Register(createRepeatableJob(1))
 
 	p1 := job.NewTaskHandlerPool(job.PrintTaskHandler{}, 50)
 	p2 := job.NewTaskHandlerPool(job.SleepTaskHandler{}, 100)
