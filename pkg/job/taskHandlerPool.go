@@ -17,7 +17,6 @@
 package job
 
 import (
-	"reflect"
 	"sync"
 )
 
@@ -37,7 +36,7 @@ type TaskHandlerPool struct {
 	mux             sync.Mutex
 }
 
-func (p *TaskHandlerPool) GetTaskType() reflect.Type {
+func (p *TaskHandlerPool) GetTaskType() string {
 	return p.handler.GetTaskType()
 }
 

@@ -16,16 +16,14 @@
 
 package job
 
-import "reflect"
-
 func NewTaskHandlerRepository() *TaskHandlerRepository {
 	return &TaskHandlerRepository{
-		handlerPool: make(map[reflect.Type]*TaskHandlerPool),
+		handlerPool: make(map[string]*TaskHandlerPool),
 	}
 }
 
 type TaskHandlerRepository struct {
-	handlerPool map[reflect.Type]*TaskHandlerPool
+	handlerPool map[string]*TaskHandlerPool
 }
 
 func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
@@ -33,5 +31,5 @@ func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
 }
 
 func (r *TaskHandlerRepository) Execute(t Task, pipeline chan interface{}) Task {
-	return r.handlerPool[reflect.TypeOf(t)].Execute(t, pipeline)
+	return r.handlerPool[t.GetTaskType()].Execute(t, pipeline)
 }

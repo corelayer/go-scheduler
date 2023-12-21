@@ -49,8 +49,6 @@ func (s *Scheduler) run(ctx context.Context) {
 		case job := <-s.config.chUpdate:
 			if job.Status == StatusCompleted {
 				queued--
-				// s.catalog.Archive(job)
-				// }
 			}
 			s.catalog.UpdateActiveJob(job)
 		default:

@@ -25,11 +25,12 @@ import (
 
 type Task interface {
 	WriteToPipeline() bool
+	GetTaskType() string
 }
 
 type TaskHandler interface {
 	Execute(t Task, pipeline chan interface{}) Task
-	GetTaskType() reflect.Type
+	GetTaskType() string
 }
 
 type SleepTask struct {
@@ -41,10 +42,14 @@ func (t SleepTask) WriteToPipeline() bool {
 	return t.WriteOutput
 }
 
+func (t SleepTask) GetTaskType() string {
+	return reflect.TypeOf(t).String()
+}
+
 type SleepTaskHandler struct{}
 
-func (h SleepTaskHandler) GetTaskType() reflect.Type {
-	return reflect.TypeOf(SleepTask{})
+func (h SleepTaskHandler) GetTaskType() string {
+	return SleepTask{}.GetTaskType()
 }
 
 func (h SleepTaskHandler) Execute(t Task, pipeline chan interface{}) Task {
@@ -73,10 +78,14 @@ func (t PrintTask) WriteToPipeline() bool {
 	return t.WriteOutput
 }
 
+func (t PrintTask) GetTaskType() string {
+	return reflect.TypeOf(t).String()
+}
+
 type PrintTaskHandler struct{}
 
-func (h PrintTaskHandler) GetTaskType() reflect.Type {
-	return reflect.TypeOf(PrintTask{})
+func (h PrintTaskHandler) GetTaskType() string {
+	return PrintTask{}.GetTaskType()
 }
 
 func (h PrintTaskHandler) Execute(t Task, pipeline chan interface{}) Task {
@@ -107,10 +116,14 @@ func (t EmptyTask) WriteToPipeline() bool {
 	return t.writeOutput
 }
 
+func (t EmptyTask) GetTaskType() string {
+	return reflect.TypeOf(EmptyTask{}).String()
+}
+
 type EmptyTaskHandler struct{}
 
-func (h EmptyTaskHandler) GetTaskType() reflect.Type {
-	return reflect.TypeOf(EmptyTask{})
+func (h EmptyTaskHandler) GetTaskType() string {
+	return EmptyTask{}.GetTaskType()
 }
 
 func (h EmptyTaskHandler) Execute(t Task, pipeline chan interface{}) Task {
