@@ -17,6 +17,7 @@
 package job
 
 import (
+	"log/slog"
 	"sync"
 )
 
@@ -47,13 +48,17 @@ func (p *TaskHandlerPool) Execute(t Task, pipeline chan interface{}) Task {
 		if p.concurrentCount < p.concurrentMax {
 			p.concurrentCount++
 			p.mux.Unlock()
+			slog.Debug("executing task from pool", "pool", p.GetTaskType())
 			output = p.handler.Execute(t, pipeline)
 			break
+		} else {
+			slog.Debug("waiting for available handler", "pool", p.GetTaskType())
 		}
 		p.mux.Unlock()
 	}
 	p.mux.Lock()
 	p.concurrentCount--
+	slog.Debug("finished handling task", "pool", p.GetTaskType(), "concurrent", p.concurrentCount)
 	p.mux.Unlock()
 	return output
 }
