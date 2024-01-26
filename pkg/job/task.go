@@ -71,6 +71,7 @@ func (h SleepTaskHandler) Execute(t Task, pipeline chan interface{}) Task {
 type PrintTask struct {
 	Message     string
 	ReadInput   bool
+	PrintInput  bool
 	WriteOutput bool
 }
 
@@ -94,7 +95,9 @@ func (h PrintTaskHandler) Execute(t Task, pipeline chan interface{}) Task {
 		select {
 		case data := <-pipeline:
 			fmt.Println(task.Message)
-			fmt.Println(data)
+			if task.PrintInput {
+				fmt.Println(data)
+			}
 			if task.WriteToPipeline() {
 				pipeline <- data
 			}
