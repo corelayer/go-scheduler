@@ -16,6 +16,8 @@
 
 package job
 
+import "log/slog"
+
 func NewTaskHandlerRepository() *TaskHandlerRepository {
 	return &TaskHandlerRepository{
 		handlerPool: make(map[string]*TaskHandlerPool),
@@ -27,9 +29,11 @@ type TaskHandlerRepository struct {
 }
 
 func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
+	slog.Debug("register task handler pool", "type", p.GetTaskType())
 	r.handlerPool[p.GetTaskType()] = p
 }
 
 func (r *TaskHandlerRepository) Execute(t Task, pipeline chan interface{}) Task {
+	slog.Debug("handle task", "type", t.GetTaskType())
 	return r.handlerPool[t.GetTaskType()].Execute(t, pipeline)
 }
