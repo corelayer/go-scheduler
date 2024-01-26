@@ -33,7 +33,20 @@ func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
 	r.handlerPool[p.GetTaskType()] = p
 }
 
+func (r *TaskHandlerRepository) GetRegisteredHandlersNames() []string {
+	keys := make([]string, len(r.handlerPool))
+	for k, _ := range r.handlerPool {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func (r *TaskHandlerRepository) Execute(t Task, pipeline chan interface{}) Task {
 	slog.Debug("handle task", "type", t.GetTaskType())
+	_, found := r.handlerPool[t.GetTaskType()]
+	if !found {
+		slog.Error("could not find handler pool for task type", "task", t.GetTaskType(), "handlers", r.GetRegisteredHandlersNames())
+		return t
+	}
 	return r.handlerPool[t.GetTaskType()].Execute(t, pipeline)
 }
