@@ -26,6 +26,14 @@ type TaskHandlerRepository struct {
 	handlerPool map[string]*TaskHandlerPool
 }
 
+func (r *TaskHandlerRepository) GetTaskHandlerNames() []string {
+	keys := make([]string, len(r.handlerPool))
+	for k := range r.handlerPool {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
 	r.handlerPool[p.GetTaskType()] = p
 }
