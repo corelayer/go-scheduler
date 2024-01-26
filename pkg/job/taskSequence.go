@@ -16,6 +16,8 @@
 
 package job
 
+import "log/slog"
+
 func NewTaskSequence(tasks []Task) TaskSequence {
 	return TaskSequence{
 		Tasks: tasks,
@@ -41,6 +43,7 @@ func (s TaskSequence) Run(r *TaskHandlerRepository) {
 	p := make(chan interface{})
 	defer close(p)
 	for i, t := range s.Tasks {
+		slog.Debug("running task in sequence", "id", i, "task", t.GetTaskType())
 		s.Tasks[i] = r.Execute(t, p)
 	}
 }
