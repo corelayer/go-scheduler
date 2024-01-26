@@ -34,6 +34,16 @@ func (r *TaskHandlerRepository) GetTaskHandlerNames() []string {
 	return keys
 }
 
+func (r *TaskHandlerRepository) IsRegistered(handler string) bool {
+	handlers := r.GetTaskHandlerNames()
+	for _, h := range handlers {
+		if h == handler {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
 	r.handlerPool[p.GetTaskType()] = p
 }
