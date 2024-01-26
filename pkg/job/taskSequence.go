@@ -25,8 +25,8 @@ func NewTaskSequence(tasks []Task) TaskSequence {
 }
 
 type TaskSequence struct {
-	pipeline chan interface{}
-	Tasks    []Task
+	// pipeline chan interface{}
+	Tasks []Task
 }
 
 func (s TaskSequence) RegisterTask(t Task) TaskSequence {
@@ -40,7 +40,7 @@ func (s TaskSequence) RegisterTasks(t []Task) TaskSequence {
 }
 
 func (s TaskSequence) Run(r *TaskHandlerRepository) {
-	p := make(chan interface{})
+	p := make(chan interface{}, 1)
 	defer close(p)
 	for i, t := range s.Tasks {
 		slog.Debug("running task in sequence", "id", i, "task", t.GetTaskType())
