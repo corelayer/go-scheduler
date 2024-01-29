@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -11,40 +10,8 @@ import (
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
 	"github.com/corelayer/go-scheduler/pkg/job"
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
-
-type TimeLogTask struct {
-	timestamp time.Time
-}
-
-func (t TimeLogTask) WriteToPipeline() bool {
-	return true
-}
-
-func (t TimeLogTask) GetTaskType() string {
-	return reflect.TypeOf(t).String()
-}
-
-type TimeLogTaskHandler struct{}
-
-func (h TimeLogTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(TimeLogTask)
-	task.timestamp = time.Now()
-
-	select {
-	case data := <-pipeline:
-		if task.WriteToPipeline() {
-			pipeline <- data
-		}
-	default:
-	}
-
-	return task
-}
-
-func (h TimeLogTaskHandler) GetTaskType() string {
-	return TimeLogTask{}.GetTaskType()
-}
 
 func createJob(i int) job.Job {
 	id, _ := uuid.NewUUID()
@@ -52,32 +19,32 @@ func createJob(i int) job.Job {
 	// rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	// d := rnd.Intn(250)
 	tasks := []job.Task{
-		TimeLogTask{},
-		// job.PrintTask{
+		task.TimeLogTask{},
+		// task.PrintTask{
 		// 	Message:     fmt.Sprintf("Job %d - Task 1", i),
 		// 	ReadInput:   false,
 		// 	WriteOutput: false,
 		// },
-		job.EmptyTask{},
-		// job.SleepTask{
+		task.EmptyTask{},
+		// task.SleepTask{
 		// 	Milliseconds: d,
 		// 	WriteOutput:  false,
 		// },
-		// job.PrintTask{
+		// task.PrintTask{
 		// 	Message:     fmt.Sprintf("Job %d - Task 2", i),
 		// 	ReadInput:   true,
 		// 	WriteOutput: true,
 		// },
-		// job.SleepTask{
+		// task.SleepTask{
 		// 	Milliseconds: d,
 		// 	WriteOutput:  true,
 		// },
-		// job.PrintTask{
+		// task.PrintTask{
 		// 	Message:     fmt.Sprintf("Job %d - Task 3", i),
 		// 	ReadInput:   false,
 		// 	WriteOutput: false,
 		// },
-		TimeLogTask{},
+		task.TimeLogTask{},
 	}
 
 	return job.Job{
@@ -97,17 +64,18 @@ func createRepeatableJob(i int) job.Job {
 	// rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	// d := rnd.Intn(1000)
 	tasks := []job.Task{
-		TimeLogTask{},
-		job.PrintTask{
+		task.TimeLogTask{},
+		task.PrintTask{
 			Message:     fmt.Sprintf("### Repeatable job %d - Print Task", i),
 			ReadInput:   false,
 			WriteOutput: true,
+			PrintInput:  true,
 		},
-		// job.SleepTask{
+		// task.SleepTask{
 		// 	Milliseconds: d,
 		// 	WriteOutput:  true,
 		// },
-		TimeLogTask{},
+		task.TimeLogTask{},
 	}
 
 	return job.Job{
@@ -129,10 +97,10 @@ func main() {
 	}
 	// c.Register(createRepeatableJob(1))
 
-	p1 := job.NewTaskHandlerPool(job.PrintTaskHandler{}, 10000)
-	p2 := job.NewTaskHandlerPool(job.SleepTaskHandler{}, 10000)
-	p3 := job.NewTaskHandlerPool(TimeLogTaskHandler{}, 100000)
-	p4 := job.NewTaskHandlerPool(job.EmptyTaskHandler{}, 10000000)
+	p1 := job.NewTaskHandlerPool(task.PrintTaskHandler{}, 10000)
+	p2 := job.NewTaskHandlerPool(task.SleepTaskHandler{}, 10000)
+	p3 := job.NewTaskHandlerPool(task.TimeLogTaskHandler{}, 100000)
+	p4 := job.NewTaskHandlerPool(task.EmptyTaskHandler{}, 10000000)
 
 	r := job.NewTaskHandlerRepository()
 	r.RegisterTaskHandlerPool(p1)

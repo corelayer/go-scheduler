@@ -38,7 +38,7 @@ func (s TaskSequence) RegisterTasks(t []Task) TaskSequence {
 }
 
 func (s TaskSequence) Run(r *TaskHandlerRepository) {
-	p := make(chan interface{})
+	p := make(chan interface{}, 1)
 	defer close(p)
 	for i, t := range s.Tasks {
 		s.Tasks[i] = r.Execute(t, p)

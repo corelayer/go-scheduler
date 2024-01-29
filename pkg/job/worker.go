@@ -75,7 +75,7 @@ func (w *Worker) run(ctx context.Context) {
 				return
 			}
 
-			// Run all tasks for job
+			// Run all task for job
 			job.Tasks.Run(w.Config.taskHandlerRepository)
 
 			job.SetStatus(StatusCompleted)
