@@ -74,6 +74,17 @@ func (c *MemoryCatalog) GetActiveJobs() []Job {
 	return jobs
 }
 
+func (c *MemoryCatalog) GetRegisteredJobs() []Job {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	var jobs = make([]Job, 0)
+	for _, job := range c.registered {
+		jobs = append(jobs, job)
+	}
+	return jobs
+}
+
 func (c *MemoryCatalog) UpdateActiveJob(job Job) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
