@@ -47,6 +47,13 @@ func (c *MemoryCatalog) CountRegisteredJobs() int {
 	return len(c.registered)
 }
 
+func (c *MemoryCatalog) CountActiveJobs() int {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	return len(c.active)
+}
+
 func (c *MemoryCatalog) Register(job Job) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
