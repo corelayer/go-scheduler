@@ -23,5 +23,6 @@ type Task interface {
 
 type TaskHandler interface {
 	Execute(t Task, pipeline chan interface{}) Task
+	GetMaxConcurrency() int
 	GetTaskType() string
 }

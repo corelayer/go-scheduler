@@ -18,8 +18,6 @@ package task
 
 import (
 	"reflect"
-
-	"github.com/corelayer/go-scheduler/pkg/job"
 )
 
 type EmptyTask struct {
@@ -33,24 +31,4 @@ func (t EmptyTask) WriteToPipeline() bool {
 
 func (t EmptyTask) GetTaskType() string {
 	return reflect.TypeOf(EmptyTask{}).String()
-}
-
-type EmptyTaskHandler struct{}
-
-func (h EmptyTaskHandler) GetTaskType() string {
-	return EmptyTask{}.GetTaskType()
-}
-
-func (h EmptyTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(EmptyTask)
-	if task.readInput {
-		select {
-		case received := <-pipeline:
-			if task.WriteToPipeline() {
-				pipeline <- received
-			}
-		default:
-		}
-	}
-	return t
 }

@@ -20,10 +20,10 @@ import (
 	"sync"
 )
 
-func NewTaskHandlerPool(h TaskHandler, maxConcurrent int) *TaskHandlerPool {
+func NewTaskHandlerPool(h TaskHandler) *TaskHandlerPool {
 	return &TaskHandlerPool{
 		handler:         h,
-		concurrentMax:   maxConcurrent,
+		concurrentMax:   h.GetMaxConcurrency(),
 		concurrentCount: 0,
 		mux:             sync.Mutex{},
 	}

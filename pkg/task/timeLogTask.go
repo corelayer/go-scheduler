@@ -19,8 +19,6 @@ package task
 import (
 	"reflect"
 	"time"
-
-	"github.com/corelayer/go-scheduler/pkg/job"
 )
 
 type TimeLogTask struct {
@@ -33,25 +31,4 @@ func (t TimeLogTask) WriteToPipeline() bool {
 
 func (t TimeLogTask) GetTaskType() string {
 	return reflect.TypeOf(t).String()
-}
-
-type TimeLogTaskHandler struct{}
-
-func (h TimeLogTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(TimeLogTask)
-	task.timestamp = time.Now()
-
-	select {
-	case data := <-pipeline:
-		if task.WriteToPipeline() {
-			pipeline <- data
-		}
-	default:
-	}
-
-	return task
-}
-
-func (h TimeLogTaskHandler) GetTaskType() string {
-	return TimeLogTask{}.GetTaskType()
 }

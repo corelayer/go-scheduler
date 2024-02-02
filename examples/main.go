@@ -97,10 +97,10 @@ func main() {
 	}
 	// c.Register(createRepeatableJob(1))
 
-	p1 := job.NewTaskHandlerPool(task.PrintTaskHandler{}, 10000)
-	p2 := job.NewTaskHandlerPool(task.SleepTaskHandler{}, 10000)
-	p3 := job.NewTaskHandlerPool(task.TimeLogTaskHandler{}, 100000)
-	p4 := job.NewTaskHandlerPool(task.EmptyTaskHandler{}, 10000000)
+	p1 := job.NewTaskHandlerPool(task.NewDefaultEmptyTaskHandler())
+	p2 := job.NewTaskHandlerPool(task.NewDefaultSleepTaskHandler())
+	p3 := job.NewTaskHandlerPool(task.NewDefaultTimeLogTaskHandler())
+	p4 := job.NewTaskHandlerPool(task.NewDefaultEmptyTaskHandler())
 
 	r := job.NewTaskHandlerRepository()
 	r.RegisterTaskHandlerPool(p1)
