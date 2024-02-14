@@ -16,6 +16,8 @@
 
 package job
 
+import "fmt"
+
 func NewTaskHandlerRepository() *TaskHandlerRepository {
 	return &TaskHandlerRepository{
 		handlerPool: make(map[string]*TaskHandlerPool),
@@ -49,5 +51,10 @@ func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
 }
 
 func (r *TaskHandlerRepository) Execute(t Task, pipeline chan interface{}) Task {
-	return r.handlerPool[t.GetTaskType()].Execute(t, pipeline)
+	handler, found := r.handlerPool[t.GetTaskType()]
+	if !found {
+		// If no handler is available, the program cannot continue
+		panic(fmt.Sprintf("could not find handler for task %s", t.GetTaskType()))
+	}
+	return handler.Execute(t, pipeline)
 }

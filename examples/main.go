@@ -99,13 +99,13 @@ func main() {
 
 	p1 := job.NewTaskHandlerPool(task.NewDefaultEmptyTaskHandler())
 	p2 := job.NewTaskHandlerPool(task.NewDefaultSleepTaskHandler())
-	p3 := job.NewTaskHandlerPool(task.NewDefaultTimeLogTaskHandler())
+	// p3 := job.NewTaskHandlerPool(task.NewDefaultTimeLogTaskHandler())
 	p4 := job.NewTaskHandlerPool(task.NewDefaultEmptyTaskHandler())
 
 	r := job.NewTaskHandlerRepository()
 	r.RegisterTaskHandlerPool(p1)
 	r.RegisterTaskHandlerPool(p2)
-	r.RegisterTaskHandlerPool(p3)
+	// r.RegisterTaskHandlerPool(p3)
 	r.RegisterTaskHandlerPool(p4)
 
 	ctx, cancel := context.WithCancel(context.Background())
