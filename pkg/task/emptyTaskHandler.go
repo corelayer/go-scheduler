@@ -16,7 +16,7 @@
 
 package task
 
-import "github.com/corelayer/go-scheduler/pkg/job"
+import "github.com/corelayer/go-scheduler/pkg/status"
 
 const (
 	EMPTY_TASKHANDLER_CONCURRENCY = 10000
@@ -38,23 +38,20 @@ type EmptyTaskHandler struct {
 	maxConcurrency int
 }
 
+func (h EmptyTaskHandler) Execute(t Task, p chan *Pipeline) Task {
+	select {
+	case pipeline := <-p:
+		if t.WriteToPipeline() {
+			p <- pipeline
+		}
+	default:
+	}
+	return t.SetStatus(status.StatusCompleted)
+}
+
 func (h EmptyTaskHandler) GetMaxConcurrency() int {
 	return h.maxConcurrency
 }
 func (h EmptyTaskHandler) GetTaskType() string {
 	return EmptyTask{}.GetTaskType()
-}
-
-func (h EmptyTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(EmptyTask)
-	if task.readInput {
-		select {
-		case received := <-pipeline:
-			if task.WriteToPipeline() {
-				pipeline <- received
-			}
-		default:
-		}
-	}
-	return t
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,16 +14,9 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-type Status int
-
-func (s Status) String() string {
-	return [...]string{"none", "pending", "completed"}[s]
+type Pipeline struct {
+	Intercom *Intercom
+	Data     interface{}
 }
-
-const (
-	StatusNone Status = iota
-	StatusPending
-	StatusCompleted
-)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
 import (
 	"sync"
 )
 
-func NewTaskHandlerPool(h TaskHandler) *TaskHandlerPool {
-	return &TaskHandlerPool{
+func NewHandlerPool(h Handler) *HandlerPool {
+	return &HandlerPool{
 		handler:         h,
 		concurrentMax:   h.GetMaxConcurrency(),
 		concurrentCount: 0,
@@ -29,25 +29,24 @@ func NewTaskHandlerPool(h TaskHandler) *TaskHandlerPool {
 	}
 }
 
-type TaskHandlerPool struct {
-	handler         TaskHandler
+type HandlerPool struct {
+	handler         Handler
 	concurrentMax   int
 	concurrentCount int
 	mux             sync.Mutex
 }
 
-func (p *TaskHandlerPool) GetTaskType() string {
+func (p *HandlerPool) GetTaskType() string {
 	return p.handler.GetTaskType()
 }
 
-func (p *TaskHandlerPool) Execute(t Task, pipeline chan interface{}) Task {
-	var output Task
+func (p *HandlerPool) Execute(t Task, pipeline chan *Pipeline) Task {
 	for {
 		p.mux.Lock()
 		if p.concurrentCount < p.concurrentMax {
 			p.concurrentCount++
 			p.mux.Unlock()
-			output = p.handler.Execute(t, pipeline)
+			t = p.handler.Execute(t, pipeline)
 			break
 		}
 		p.mux.Unlock()
@@ -55,5 +54,5 @@ func (p *TaskHandlerPool) Execute(t Task, pipeline chan interface{}) Task {
 	p.mux.Lock()
 	p.concurrentCount--
 	p.mux.Unlock()
-	return output
+	return t
 }

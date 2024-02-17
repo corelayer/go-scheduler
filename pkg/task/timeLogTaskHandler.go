@@ -19,7 +19,7 @@ package task
 import (
 	"time"
 
-	"github.com/corelayer/go-scheduler/pkg/job"
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 const (
@@ -42,25 +42,38 @@ type TimeLogTaskHandler struct {
 	maxConcurrency int
 }
 
-func (h TimeLogTaskHandler) GetMaxConcurrency() int {
-	return h.maxConcurrency
-}
-
-func (h TimeLogTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
+func (h TimeLogTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	task := t.(TimeLogTask)
-	task.timestamp = time.Now()
 
 	select {
-	case data := <-pipeline:
+	case pipeline := <-p:
+		task = h.processTask(task, pipeline)
 		if task.WriteToPipeline() {
-			pipeline <- data
+			p <- pipeline
 		}
 	default:
 	}
 
-	return task
+	return task.SetStatus(status.StatusCompleted)
+}
+
+func (h TimeLogTaskHandler) GetMaxConcurrency() int {
+	return h.maxConcurrency
 }
 
 func (h TimeLogTaskHandler) GetTaskType() string {
 	return TimeLogTask{}.GetTaskType()
+}
+
+func (h TimeLogTaskHandler) processTask(t TimeLogTask, p *Pipeline) TimeLogTask {
+	timestamp := time.Now()
+
+	p.Intercom.Add(Message{
+		Type:  LogMessage,
+		Task:  t.GetTaskType(),
+		Value: timestamp,
+	})
+	t.Timestamp = timestamp
+
+	return t
 }

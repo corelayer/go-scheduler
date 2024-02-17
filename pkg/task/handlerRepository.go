@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
 import "fmt"
 
-func NewTaskHandlerRepository() *TaskHandlerRepository {
-	return &TaskHandlerRepository{
-		handlerPool: make(map[string]*TaskHandlerPool),
+func NewHandlerRepository() *HandlerRepository {
+	return &HandlerRepository{
+		handlerPool: make(map[string]*HandlerPool),
 	}
 }
 
-type TaskHandlerRepository struct {
-	handlerPool map[string]*TaskHandlerPool
+type HandlerRepository struct {
+	handlerPool map[string]*HandlerPool
 }
 
-func (r *TaskHandlerRepository) GetTaskHandlerNames() []string {
+func (r *HandlerRepository) GetHandlerNames() []string {
 	keys := make([]string, len(r.handlerPool))
 	for k := range r.handlerPool {
 		keys = append(keys, k)
@@ -36,9 +36,8 @@ func (r *TaskHandlerRepository) GetTaskHandlerNames() []string {
 	return keys
 }
 
-func (r *TaskHandlerRepository) IsRegistered(handler string) bool {
-	handlers := r.GetTaskHandlerNames()
-	for _, h := range handlers {
+func (r *HandlerRepository) IsRegistered(handler string) bool {
+	for _, h := range r.GetHandlerNames() {
 		if h == handler {
 			return true
 		}
@@ -46,11 +45,11 @@ func (r *TaskHandlerRepository) IsRegistered(handler string) bool {
 	return false
 }
 
-func (r *TaskHandlerRepository) RegisterTaskHandlerPool(p *TaskHandlerPool) {
+func (r *HandlerRepository) RegisterHandlerPool(p *HandlerPool) {
 	r.handlerPool[p.GetTaskType()] = p
 }
 
-func (r *TaskHandlerRepository) Execute(t Task, pipeline chan interface{}) Task {
+func (r *HandlerRepository) Execute(t Task, pipeline chan *Pipeline) Task {
 	handler, found := r.handlerPool[t.GetTaskType()]
 	if !found {
 		// If no handler is available, the program cannot continue

@@ -20,6 +20,8 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 func NewMemoryCatalog() *MemoryCatalog {
@@ -52,6 +54,13 @@ func (c *MemoryCatalog) CountActiveJobs() int {
 	defer c.mux.Unlock()
 
 	return len(c.active)
+}
+
+func (c *MemoryCatalog) CountArchivedJobs() int {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	return len(c.archive)
 }
 
 func (c *MemoryCatalog) Register(job Job) {
@@ -97,7 +106,7 @@ func (c *MemoryCatalog) UpdateActiveJob(job Job) {
 	defer c.mux.Unlock()
 
 	// fmt.Printf("Updating job \"%s\" - status \"%s\"\r\n", job.Name, job.Status)
-	if job.Status == StatusCompleted {
+	if job.Status == status.StatusCompleted || job.Status == status.StatusError {
 		// Copy job to archive
 		c.archive = append(c.archive, job)
 

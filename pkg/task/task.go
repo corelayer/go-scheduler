@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,23 +14,13 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-import "testing"
+import "github.com/corelayer/go-scheduler/pkg/status"
 
-func TestStatus_String(t *testing.T) {
-	var (
-		result []string
-		wanted = []string{"none", "pending", "completed"}
-	)
-
-	for i := 0; i < len(wanted); i++ {
-		result = append(result, Status(i).String())
-	}
-
-	for j := 0; j < len(wanted); j++ {
-		if result[j] != wanted[j] {
-			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
-		}
-	}
+type Task interface {
+	GetStatus() status.Status
+	GetTaskType() string
+	SetStatus(s status.Status) Task
+	WriteToPipeline() bool
 }

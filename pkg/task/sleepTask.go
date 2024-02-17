@@ -18,17 +18,28 @@ package task
 
 import (
 	"reflect"
+
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type SleepTask struct {
 	Milliseconds int
-	WriteOutput  bool
+	status       status.Status
 }
 
-func (t SleepTask) WriteToPipeline() bool {
-	return t.WriteOutput
+func (t SleepTask) GetStatus() status.Status {
+	return t.status
 }
 
 func (t SleepTask) GetTaskType() string {
 	return reflect.TypeOf(t).String()
+}
+
+func (t SleepTask) SetStatus(s status.Status) Task {
+	t.status = s
+	return t
+}
+
+func (t SleepTask) WriteToPipeline() bool {
+	return true
 }

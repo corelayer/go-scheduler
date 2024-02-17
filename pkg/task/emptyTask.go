@@ -18,17 +18,27 @@ package task
 
 import (
 	"reflect"
+
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type EmptyTask struct {
-	readInput   bool
-	writeOutput bool
+	status status.Status
 }
 
-func (t EmptyTask) WriteToPipeline() bool {
-	return t.writeOutput
+func (t EmptyTask) GetStatus() status.Status {
+	return t.status
 }
 
 func (t EmptyTask) GetTaskType() string {
 	return reflect.TypeOf(EmptyTask{}).String()
+}
+
+func (t EmptyTask) SetStatus(s status.Status) Task {
+	t.status = s
+	return t
+}
+
+func (t EmptyTask) WriteToPipeline() bool {
+	return true
 }

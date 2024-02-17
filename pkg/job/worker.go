@@ -21,22 +21,25 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/corelayer/go-scheduler/pkg/status"
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
-func NewWorkerConfig(id int, r *TaskHandlerRepository) (WorkerConfig, error) {
+func NewWorkerConfig(id int, r *task.HandlerRepository) (WorkerConfig, error) {
 	if r == nil {
-		return WorkerConfig{}, fmt.Errorf("invalid TaskHandlerRepository")
+		return WorkerConfig{}, fmt.Errorf("invalid task.HandlerRepository")
 	}
 	return WorkerConfig{
 		id:                        id,
-		taskHandlerRepository:     r,
+		repository:                r,
 		idleSleepTimeMilliseconds: 250,
 	}, nil
 }
 
 type WorkerConfig struct {
 	id                        int
-	taskHandlerRepository     *TaskHandlerRepository
+	repository                *task.HandlerRepository
 	idleSleepTimeMilliseconds int
 }
 
@@ -52,8 +55,8 @@ func NewWorker(ctx context.Context, config WorkerConfig, chInput chan Job, chUpd
 		chUpdate: chUpdate,
 	}
 
-	if config.taskHandlerRepository == nil {
-		return nil, fmt.Errorf("invalid TaskHandlerRepository in WorkerConfig")
+	if config.repository == nil {
+		return nil, fmt.Errorf("invalid repository in WorkerConfig")
 	}
 	go w.run(ctx)
 	return w, nil
@@ -75,10 +78,14 @@ func (w *Worker) run(ctx context.Context) {
 				return
 			}
 
-			// Run all task for job
-			job.Tasks.Run(w.Config.taskHandlerRepository)
+			if job.Intercom == nil {
+				job.Intercom = task.NewIntercom()
+			}
 
-			job.SetStatus(StatusCompleted)
+			// Run all task for job
+			job.Tasks.Run(w.Config.repository, job.Intercom)
+
+			job.SetStatus(status.StatusCompleted)
 			w.chUpdate <- job
 		}
 	}

@@ -14,32 +14,23 @@
  *    limitations under the License.
  */
 
-package task
+package status
 
-import (
-	"reflect"
+import "testing"
 
-	"github.com/corelayer/go-scheduler/pkg/status"
-)
+func TestStatus_String(t *testing.T) {
+	var (
+		result []string
+		wanted = []string{"none", "pending", "completed", "error"}
+	)
 
-type PrintTask struct {
-	Message string
-	status  status.Status
-}
+	for i := 0; i < len(wanted); i++ {
+		result = append(result, Status(i).String())
+	}
 
-func (t PrintTask) GetStatus() status.Status {
-	return t.status
-}
-
-func (t PrintTask) GetTaskType() string {
-	return reflect.TypeOf(t).String()
-}
-
-func (t PrintTask) SetStatus(s status.Status) Task {
-	t.status = s
-	return t
-}
-
-func (t PrintTask) WriteToPipeline() bool {
-	return true
+	for j := 0; j < len(wanted); j++ {
+		if result[j] != wanted[j] {
+			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
+		}
+	}
 }

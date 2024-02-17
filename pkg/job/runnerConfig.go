@@ -16,19 +16,21 @@
 
 package job
 
-func NewRunnerConfig(maxJobs int, r *TaskHandlerRepository, chInput chan Job, chOutput chan Job) RunnerConfig {
+import "github.com/corelayer/go-scheduler/pkg/task"
+
+func NewRunnerConfig(maxJobs int, r *task.HandlerRepository, chInput chan Job, chOutput chan Job) RunnerConfig {
 	c := RunnerConfig{
-		MaxJobs:      maxJobs,
-		TaskHandlers: r,
-		chInput:      chInput,
-		chOutput:     chOutput,
+		MaxJobs:    maxJobs,
+		Repository: r,
+		chInput:    chInput,
+		chOutput:   chOutput,
 	}
 	return c
 }
 
 type RunnerConfig struct {
-	MaxJobs      int
-	TaskHandlers *TaskHandlerRepository
-	chInput      chan Job
-	chOutput     chan Job
+	MaxJobs    int
+	Repository *task.HandlerRepository
+	chInput    chan Job
+	chOutput   chan Job
 }

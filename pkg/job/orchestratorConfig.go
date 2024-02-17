@@ -16,14 +16,16 @@
 
 package job
 
-func NewOrchestratorConfig(maxJobs int, r *TaskHandlerRepository) OrchestratorConfig {
+import "github.com/corelayer/go-scheduler/pkg/task"
+
+func NewOrchestratorConfig(maxJobs int, r *task.HandlerRepository) OrchestratorConfig {
 	return OrchestratorConfig{
-		MaxJobs:      maxJobs,
-		TaskHandlers: r,
+		MaxJobs:    maxJobs,
+		Repository: r,
 	}
 }
 
 type OrchestratorConfig struct {
-	MaxJobs      int
-	TaskHandlers *TaskHandlerRepository
+	MaxJobs    int
+	Repository *task.HandlerRepository
 }

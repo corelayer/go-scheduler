@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/corelayer/go-scheduler/pkg/job"
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 const (
@@ -33,14 +33,29 @@ func NewDefaultSleepTaskHandler() SleepTaskHandler {
 	}
 }
 
-func NewSleepTaskHandler(maxCocurrency int) SleepTaskHandler {
+func NewSleepTaskHandler(maxConcurrency int) SleepTaskHandler {
 	return SleepTaskHandler{
-		maxConcurrency: maxCocurrency,
+		maxConcurrency: maxConcurrency,
 	}
 }
 
 type SleepTaskHandler struct {
 	maxConcurrency int
+}
+
+func (h SleepTaskHandler) Execute(t Task, p chan *Pipeline) Task {
+	d, _ := time.ParseDuration(strconv.Itoa(t.(SleepTask).Milliseconds) + "ms")
+	time.Sleep(d)
+
+	select {
+	case pipeline := <-p:
+		if t.WriteToPipeline() {
+			p <- pipeline
+		}
+	default:
+	}
+
+	return t.SetStatus(status.StatusCompleted)
 }
 
 func (h SleepTaskHandler) GetMaxConcurrency() int {
@@ -49,20 +64,4 @@ func (h SleepTaskHandler) GetMaxConcurrency() int {
 
 func (h SleepTaskHandler) GetTaskType() string {
 	return SleepTask{}.GetTaskType()
-}
-
-func (h SleepTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(SleepTask)
-	d, _ := time.ParseDuration(strconv.Itoa(task.Milliseconds) + "ms")
-	time.Sleep(d)
-
-	select {
-	case data := <-pipeline:
-		if task.WriteToPipeline() {
-			pipeline <- data
-		}
-	default:
-	}
-
-	return task
 }

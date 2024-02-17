@@ -14,32 +14,17 @@
  *    limitations under the License.
  */
 
-package task
+package status
 
-import (
-	"reflect"
+type Status int
 
-	"github.com/corelayer/go-scheduler/pkg/status"
+func (s Status) String() string {
+	return [...]string{"none", "pending", "completed", "error"}[s]
+}
+
+const (
+	StatusNone Status = iota
+	StatusPending
+	StatusCompleted
+	StatusError
 )
-
-type PrintTask struct {
-	Message string
-	status  status.Status
-}
-
-func (t PrintTask) GetStatus() status.Status {
-	return t.status
-}
-
-func (t PrintTask) GetTaskType() string {
-	return reflect.TypeOf(t).String()
-}
-
-func (t PrintTask) SetStatus(s status.Status) Task {
-	t.status = s
-	return t
-}
-
-func (t PrintTask) WriteToPipeline() bool {
-	return true
-}

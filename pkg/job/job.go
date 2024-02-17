@@ -22,16 +22,19 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
+	"github.com/corelayer/go-scheduler/pkg/status"
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
 type Job struct {
 	Uuid     uuid.UUID
 	Enabled  bool
-	Status   Status
+	Status   status.Status
 	Schedule cron.Schedule
 	Repeat   bool
 	Name     string
-	Tasks    TaskSequence
+	Tasks    task.Sequence
+	Intercom *task.Intercom
 }
 
 func (j *Job) IsDue() bool {
@@ -45,10 +48,10 @@ func (j *Job) IsDue() bool {
 	return false
 }
 
-func (j *Job) SetStatus(status Status) {
+func (j *Job) SetStatus(status status.Status) {
 	j.Status = status
 }
 
 func (j *Job) IsPending() bool {
-	return j.Status == StatusPending
+	return j.Status == status.StatusPending
 }

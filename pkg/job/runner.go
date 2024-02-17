@@ -22,8 +22,8 @@ import (
 )
 
 func NewRunner(ctx context.Context, config RunnerConfig) (*Runner, error) {
-	if config.TaskHandlers == nil {
-		return nil, fmt.Errorf("invalid TaskHandlerRepository in RunnerConfig")
+	if config.Repository == nil {
+		return nil, fmt.Errorf("invalid repository in RunnerConfig")
 	}
 
 	r := &Runner{
@@ -35,7 +35,7 @@ func NewRunner(ctx context.Context, config RunnerConfig) (*Runner, error) {
 	workers := make([]*Worker, config.MaxJobs)
 	for i := 0; i < config.MaxJobs; i++ {
 		// Create worker config
-		wc, err := NewWorkerConfig(i, config.TaskHandlers)
+		wc, err := NewWorkerConfig(i, config.Repository)
 		if err != nil {
 			return nil, err
 		}

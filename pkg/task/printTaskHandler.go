@@ -19,7 +19,7 @@ package task
 import (
 	"fmt"
 
-	"github.com/corelayer/go-scheduler/pkg/job"
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 const (
@@ -49,23 +49,17 @@ func (h PrintTaskHandler) GetTaskType() string {
 	return PrintTask{}.GetTaskType()
 }
 
-func (h PrintTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(PrintTask)
-	if task.ReadInput {
-		select {
-		case data := <-pipeline:
-			fmt.Println(task.Message)
-			if task.PrintInput {
-				fmt.Println(data)
-			}
-			if task.WriteToPipeline() {
-				pipeline <- data
-			}
-		default:
-			fmt.Println(task.Message)
+func (h PrintTaskHandler) Execute(t Task, p chan *Pipeline) Task {
+	select {
+	case pipeline := <-p:
+		fmt.Println(t.(PrintTask).Message)
+
+		if t.WriteToPipeline() {
+			p <- pipeline
 		}
-	} else {
-		fmt.Println(task.Message)
+	default:
+		fmt.Println(t.(PrintTask).Message)
 	}
-	return task
+
+	return t.SetStatus(status.StatusCompleted)
 }

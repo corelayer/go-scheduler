@@ -19,16 +19,28 @@ package task
 import (
 	"reflect"
 	"time"
+
+	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type TimeLogTask struct {
-	timestamp time.Time
+	Timestamp time.Time
+	status    status.Status
 }
 
-func (t TimeLogTask) WriteToPipeline() bool {
-	return true
+func (t TimeLogTask) GetStatus() status.Status {
+	return t.status
 }
 
 func (t TimeLogTask) GetTaskType() string {
 	return reflect.TypeOf(t).String()
+}
+
+func (t TimeLogTask) SetStatus(s status.Status) Task {
+	t.status = s
+	return t
+}
+
+func (t TimeLogTask) WriteToPipeline() bool {
+	return true
 }
