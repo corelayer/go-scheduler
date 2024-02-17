@@ -39,6 +39,10 @@ func (c *Intercom) Add(m Message) {
 	c.messages = append(c.messages, m)
 }
 
+func (c *Intercom) CountErrorMessages() int {
+	return len(c.Get(ErrorMessage))
+}
+
 func (c *Intercom) Get(t MessageType) []Message {
 	c.mux.Lock()
 	defer c.mux.Unlock()
