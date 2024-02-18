@@ -16,11 +16,25 @@
 
 package task
 
-import "github.com/corelayer/go-scheduler/pkg/status"
+import (
+	"log/slog"
+
+	"github.com/corelayer/go-scheduler/pkg/status"
+)
 
 type Task interface {
 	GetStatus() status.Status
 	GetTaskType() string
 	SetStatus(s status.Status) Task
 	WriteToPipeline() bool
+}
+
+func GetLogAttrs(t Task) []slog.Attr {
+	return []slog.Attr{
+		slog.Group(
+			"task",
+			slog.String("name", t.GetTaskType()),
+			slog.String("status", t.GetStatus().String()),
+		),
+	}
 }
