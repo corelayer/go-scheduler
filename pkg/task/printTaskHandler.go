@@ -57,8 +57,6 @@ func (h PrintTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 		if t.WriteToPipeline() {
 			p <- pipeline
 		}
-	default:
-		fmt.Println(t.(PrintTask).Message)
 	}
 
 	return t.SetStatus(status.StatusCompleted)

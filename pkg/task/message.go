@@ -17,7 +17,8 @@
 package task
 
 type Message struct {
-	Type  MessageType
-	Task  string
-	Value interface{}
+	Message string
+	Task    string
+	Type    MessageType
+	Data    interface{}
 }

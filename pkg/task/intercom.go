@@ -63,6 +63,15 @@ func (c *Intercom) GetAll() []Message {
 	return c.messages
 }
 
+func (c *Intercom) GetErrors() []error {
+	// DO NOT LOCK HERE, locking is done in c.Get()
+	var errors = make([]error, 0)
+	for _, m := range c.Get(ErrorMessage) {
+		errors = append(errors, m.Data.(error))
+	}
+	return errors
+}
+
 func (c *Intercom) HasErrors() bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()

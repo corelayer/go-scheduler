@@ -69,9 +69,10 @@ func (h TimeLogTaskHandler) processTask(t TimeLogTask, p *Pipeline) TimeLogTask 
 	timestamp := time.Now()
 
 	p.Intercom.Add(Message{
-		Type:  LogMessage,
-		Task:  t.GetTaskType(),
-		Value: timestamp,
+		Message: "current time",
+		Type:    LogMessage,
+		Task:    t.GetTaskType(),
+		Data:    timestamp,
 	})
 	t.Timestamp = timestamp
 
