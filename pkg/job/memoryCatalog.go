@@ -78,6 +78,17 @@ func (c *MemoryCatalog) Unregister(uuid uuid.UUID) {
 	delete(c.registered, uuid)
 }
 
+func (c *MemoryCatalog) GetArchivedJobs() []Job {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	var jobs = make([]Job, 0)
+	for _, job := range c.archive {
+		jobs = append(jobs, job)
+	}
+	return jobs
+}
+
 // ACTIVE JOB FUNCTIONS
 func (c *MemoryCatalog) GetActiveJobs() []Job {
 	c.mux.Lock()

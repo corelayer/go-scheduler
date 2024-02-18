@@ -24,8 +24,10 @@ type CatalogReadWriter interface {
 }
 
 type CatalogReader interface {
+	CountArchivedJobs() int
 	CountRegisteredJobs() int
 	CountActiveJobs() int
+	GetArchivedJobs() []Job
 	GetActiveJobs() []Job
 	GetRegisteredJobs() []Job
 }
