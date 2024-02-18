@@ -29,12 +29,14 @@ type Task interface {
 	WriteToPipeline() bool
 }
 
-func GetLogAttrs(t Task) []slog.Attr {
-	return []slog.Attr{
-		slog.Group(
-			"task",
-			slog.String("name", t.GetTaskType()),
-			slog.String("status", t.GetStatus().String()),
-		),
-	}
+func GetTaskAttr(t Task) slog.Attr {
+	return slog.Group(
+		"task",
+		slog.String("name", t.GetTaskType()),
+		slog.String("status", t.GetStatus().String()),
+	)
+}
+
+func GetErrorAttr(err error) slog.Attr {
+	return slog.String("error", err.Error())
 }
