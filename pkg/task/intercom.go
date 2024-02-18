@@ -63,6 +63,18 @@ func (c *Intercom) GetAll() []Message {
 	return c.messages
 }
 
+func (c *Intercom) HasErrors() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	for _, m := range c.messages {
+		if m.Type == ErrorMessage {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Intercom) Reset() {
 	c.mux.Lock()
 	defer c.mux.Unlock()

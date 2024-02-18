@@ -28,11 +28,11 @@ import (
 
 type Job struct {
 	Uuid     uuid.UUID
+	Name     string
 	Enabled  bool
 	Status   status.Status
 	Schedule cron.Schedule
 	Repeat   bool
-	Name     string
 	Tasks    task.Sequence
 	Intercom *task.Intercom
 }
