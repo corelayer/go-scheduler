@@ -26,6 +26,19 @@ import (
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
+func NewJob(id uuid.UUID, name string, enabled bool, schedule cron.Schedule, tasks []task.Task) Job {
+	return Job{
+		Uuid:     id,
+		Name:     name,
+		Enabled:  enabled,
+		Status:   status.StatusNone,
+		Schedule: schedule,
+		Repeat:   false,
+		Tasks:    task.NewSequence(tasks),
+		Intercom: task.NewIntercom(),
+	}
+}
+
 type Job struct {
 	Uuid     uuid.UUID
 	Name     string
@@ -48,10 +61,14 @@ func (j *Job) IsDue() bool {
 	return false
 }
 
+func (j *Job) IsPending() bool {
+	return j.Status == status.StatusPending
+}
+
 func (j *Job) SetStatus(status status.Status) {
 	j.Status = status
 }
 
-func (j *Job) IsPending() bool {
-	return j.Status == status.StatusPending
+func (j *Job) SetTaskSequence(s task.Sequence) {
+	j.Tasks = s
 }
