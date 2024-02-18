@@ -19,7 +19,7 @@ package status
 type Status int
 
 func (s Status) String() string {
-	return [...]string{"none", "pending", "completed", "error"}[s]
+	return [...]string{"none", "pending", "completed", "error", "canceled"}[s]
 }
 
 const (
@@ -27,4 +27,5 @@ const (
 	StatusPending
 	StatusCompleted
 	StatusError
+	StatusCanceled
 )

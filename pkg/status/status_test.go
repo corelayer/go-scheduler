@@ -21,7 +21,7 @@ import "testing"
 func TestStatus_String(t *testing.T) {
 	var (
 		result []string
-		wanted = []string{"none", "pending", "completed", "error"}
+		wanted = []string{"none", "pending", "completed", "error", "canceled"}
 	)
 
 	for i := 0; i < len(wanted); i++ {
