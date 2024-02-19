@@ -57,9 +57,7 @@ func (r *HandlerRepository) HandlerNames() []string {
 }
 
 func (r *HandlerRepository) IsRegistered(handler string) bool {
-	r.mux.Lock()
 	handlers := r.HandlerNames()
-	r.mux.Unlock()
 
 	for _, h := range handlers {
 		if h == handler {
