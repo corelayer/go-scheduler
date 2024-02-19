@@ -85,7 +85,11 @@ func (w *Worker) run(ctx context.Context) {
 			// Run all task for job
 			job.Tasks.Execute(w.Config.repository, job.Intercom)
 
-			job.SetStatus(status.StatusCompleted)
+			if job.Intercom.HasErrors() {
+				job.SetStatus(status.StatusError)
+			} else {
+				job.SetStatus(status.StatusCompleted)
+			}
 			w.chUpdate <- job
 		}
 	}
