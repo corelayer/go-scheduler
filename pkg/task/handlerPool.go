@@ -25,7 +25,7 @@ func NewHandlerPool(h Handler) *HandlerPool {
 		handler:         h,
 		concurrentMax:   h.MaxConcurrent(),
 		concurrentCount: 0,
-		mux:             sync.Mutex{},
+		mux:             &sync.Mutex{},
 	}
 }
 
@@ -33,7 +33,7 @@ type HandlerPool struct {
 	handler         Handler
 	concurrentMax   int
 	concurrentCount int
-	mux             sync.Mutex
+	mux             *sync.Mutex
 }
 
 func (p *HandlerPool) ActiveHandlers() int {

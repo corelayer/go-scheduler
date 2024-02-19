@@ -23,13 +23,13 @@ import (
 func NewIntercom() *Intercom {
 	return &Intercom{
 		messages: make([]Message, 0),
-		mux:      sync.Mutex{},
+		mux:      &sync.Mutex{},
 	}
 }
 
 type Intercom struct {
 	messages []Message
-	mux      sync.Mutex
+	mux      *sync.Mutex
 }
 
 func (c *Intercom) Add(m Message) {

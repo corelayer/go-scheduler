@@ -24,13 +24,13 @@ import (
 func NewHandlerRepository() *HandlerRepository {
 	return &HandlerRepository{
 		handlerPool: make(map[string]*HandlerPool),
-		mux:         sync.Mutex{},
+		mux:         &sync.Mutex{},
 	}
 }
 
 type HandlerRepository struct {
 	handlerPool map[string]*HandlerPool
-	mux         sync.Mutex
+	mux         *sync.Mutex
 }
 
 func (r *HandlerRepository) Execute(t Task, pipeline chan *Pipeline) Task {

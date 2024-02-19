@@ -74,7 +74,12 @@ func (s Sequence) Execute(r *HandlerRepository, c *Intercom) {
 	for i, t := range s.tasks {
 		s.mux.Lock()
 		s.activeIdx = i
-		s.tasks[i] = r.Execute(t, pipeline)
+		s.mux.Unlock()
+
+		t = r.Execute(t, pipeline)
+
+		s.mux.Lock()
+		s.tasks[i] = t
 		s.mux.Unlock()
 	}
 
