@@ -24,23 +24,23 @@ import (
 )
 
 const (
-	SLEEP_TASKHANDLER_CONCURRENCY = 10000
+	MAX_CONCURRENT_TASKHANDLER_SLEEP = 10000
 )
 
 func NewDefaultSleepTaskHandler() SleepTaskHandler {
 	return SleepTaskHandler{
-		maxConcurrency: SLEEP_TASKHANDLER_CONCURRENCY,
+		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_SLEEP,
 	}
 }
 
-func NewSleepTaskHandler(maxConcurrency int) SleepTaskHandler {
+func NewSleepTaskHandler(maxConcurrent int) SleepTaskHandler {
 	return SleepTaskHandler{
-		maxConcurrency: maxConcurrency,
+		maxConcurrent: maxConcurrent,
 	}
 }
 
 type SleepTaskHandler struct {
-	maxConcurrency int
+	maxConcurrent int
 }
 
 func (h SleepTaskHandler) Execute(t Task, p chan *Pipeline) Task {
@@ -58,10 +58,10 @@ func (h SleepTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	return t.SetStatus(status.StatusCompleted)
 }
 
-func (h SleepTaskHandler) GetMaxConcurrency() int {
-	return h.maxConcurrency
+func (h SleepTaskHandler) MaxConcurrent() int {
+	return h.maxConcurrent
 }
 
-func (h SleepTaskHandler) GetTaskType() string {
-	return SleepTask{}.GetTaskType()
+func (h SleepTaskHandler) Type() string {
+	return SleepTask{}.Type()
 }

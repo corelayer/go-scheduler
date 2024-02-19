@@ -18,40 +18,67 @@ package task
 
 import (
 	"sync"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 func NewSequence(tasks []Task) Sequence {
 	return Sequence{
-		Tasks: tasks,
+		tasks: tasks,
 		mux:   &sync.Mutex{},
 	}
 }
 
 type Sequence struct {
-	Tasks      []Task
-	active     bool
-	activeTask int
-	mux        *sync.Mutex
+	tasks     []Task
+	active    bool
+	activeIdx int
+	mux       *sync.Mutex
 }
 
-func (s Sequence) GetActiveTaskIndex() int {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-
-	return s.activeTask
-}
-
-func (s Sequence) GetTaskStatus() []status.Status {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-
-	var output = make([]status.Status, len(s.Tasks))
-	for i, t := range s.Tasks {
-		output[i] = t.GetStatus()
+func (s Sequence) ActiveTask() Task {
+	if s.IsActive() {
+		s.mux.Lock()
+		defer s.mux.Unlock()
+		return s.tasks[s.activeIdx]
 	}
-	return output
+	return nil
+}
+
+func (s Sequence) ActiveIndex() int {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	return s.activeIdx
+}
+
+func (s Sequence) All() []Task {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	return s.tasks
+}
+
+func (s Sequence) Count() int {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	return len(s.tasks)
+}
+
+func (s Sequence) Execute(r *HandlerRepository, c *Intercom) {
+	pipeline := make(chan *Pipeline, 1)
+	defer close(pipeline)
+
+	s.active = true
+	pipeline <- &Pipeline{Intercom: c}
+
+	for i, t := range s.tasks {
+		s.mux.Lock()
+		s.activeIdx = i
+		s.tasks[i] = r.Execute(t, pipeline)
+		s.mux.Unlock()
+	}
+
+	s.active = false
 }
 
 func (s Sequence) IsActive() bool {
@@ -62,28 +89,11 @@ func (s Sequence) IsActive() bool {
 }
 
 func (s Sequence) RegisterTask(t Task) Sequence {
-	s.Tasks = append(s.Tasks, t)
+	s.tasks = append(s.tasks, t)
 	return s
 }
 
 func (s Sequence) RegisterTasks(t []Task) Sequence {
-	s.Tasks = append(s.Tasks, t...)
+	s.tasks = append(s.tasks, t...)
 	return s
-}
-
-func (s Sequence) Run(r *HandlerRepository, c *Intercom) {
-	pipeline := make(chan *Pipeline, 1)
-	defer close(pipeline)
-
-	s.active = true
-	pipeline <- &Pipeline{Intercom: c}
-
-	for i, t := range s.Tasks {
-		s.mux.Lock()
-		s.activeTask = i
-		s.Tasks[i] = r.Execute(t, pipeline)
-		s.mux.Unlock()
-	}
-
-	s.active = false
 }

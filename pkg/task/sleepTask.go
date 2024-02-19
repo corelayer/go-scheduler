@@ -27,11 +27,15 @@ type SleepTask struct {
 	status       status.Status
 }
 
-func (t SleepTask) GetStatus() status.Status {
+func (t SleepTask) Name() string {
+	return "sleep"
+}
+
+func (t SleepTask) Status() status.Status {
 	return t.status
 }
 
-func (t SleepTask) GetTaskType() string {
+func (t SleepTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 

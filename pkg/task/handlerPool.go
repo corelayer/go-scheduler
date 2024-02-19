@@ -23,7 +23,7 @@ import (
 func NewHandlerPool(h Handler) *HandlerPool {
 	return &HandlerPool{
 		handler:         h,
-		concurrentMax:   h.GetMaxConcurrency(),
+		concurrentMax:   h.MaxConcurrent(),
 		concurrentCount: 0,
 		mux:             sync.Mutex{},
 	}
@@ -36,8 +36,18 @@ type HandlerPool struct {
 	mux             sync.Mutex
 }
 
-func (p *HandlerPool) GetTaskType() string {
-	return p.handler.GetTaskType()
+func (p *HandlerPool) ActiveHandlers() int {
+	p.mux.Lock()
+	defer p.mux.Unlock()
+
+	return p.concurrentCount
+}
+
+func (p *HandlerPool) AvailableHandlers() int {
+	p.mux.Lock()
+	defer p.mux.Unlock()
+
+	return p.concurrentMax - p.concurrentCount
 }
 
 func (p *HandlerPool) Execute(t Task, pipeline chan *Pipeline) Task {
@@ -55,4 +65,8 @@ func (p *HandlerPool) Execute(t Task, pipeline chan *Pipeline) Task {
 	p.concurrentCount--
 	p.mux.Unlock()
 	return t
+}
+
+func (p *HandlerPool) Type() string {
+	return p.handler.Type()
 }

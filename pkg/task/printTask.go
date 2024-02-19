@@ -27,11 +27,15 @@ type PrintTask struct {
 	status  status.Status
 }
 
-func (t PrintTask) GetStatus() status.Status {
+func (t PrintTask) Name() string {
+	return "print"
+}
+
+func (t PrintTask) Status() status.Status {
 	return t.status
 }
 
-func (t PrintTask) GetTaskType() string {
+func (t PrintTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 

@@ -26,11 +26,15 @@ type EmptyTask struct {
 	status status.Status
 }
 
-func (t EmptyTask) GetStatus() status.Status {
+func (t EmptyTask) Name() string {
+	return "empty"
+}
+
+func (t EmptyTask) Status() status.Status {
 	return t.status
 }
 
-func (t EmptyTask) GetTaskType() string {
+func (t EmptyTask) Type() string {
 	return reflect.TypeOf(EmptyTask{}).String()
 }
 

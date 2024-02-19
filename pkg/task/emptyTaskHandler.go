@@ -19,23 +19,23 @@ package task
 import "github.com/corelayer/go-scheduler/pkg/status"
 
 const (
-	EMPTY_TASKHANDLER_CONCURRENCY = 10000
+	MAX_CONCURRENT_TASKHANDLER_EMPTY = 10000
 )
 
 func NewDefaultEmptyTaskHandler() EmptyTaskHandler {
 	return EmptyTaskHandler{
-		maxConcurrency: EMPTY_TASKHANDLER_CONCURRENCY,
+		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_EMPTY,
 	}
 }
 
-func NewEmptyTaskHandler(maxConcurrency int) EmptyTaskHandler {
+func NewEmptyTaskHandler(maxConcurrent int) EmptyTaskHandler {
 	return EmptyTaskHandler{
-		maxConcurrency: maxConcurrency,
+		maxConcurrent: maxConcurrent,
 	}
 }
 
 type EmptyTaskHandler struct {
-	maxConcurrency int
+	maxConcurrent int
 }
 
 func (h EmptyTaskHandler) Execute(t Task, p chan *Pipeline) Task {
@@ -49,9 +49,9 @@ func (h EmptyTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	return t.SetStatus(status.StatusCompleted)
 }
 
-func (h EmptyTaskHandler) GetMaxConcurrency() int {
-	return h.maxConcurrency
+func (h EmptyTaskHandler) MaxConcurrent() int {
+	return h.maxConcurrent
 }
-func (h EmptyTaskHandler) GetTaskType() string {
-	return EmptyTask{}.GetTaskType()
+func (h EmptyTaskHandler) Type() string {
+	return EmptyTask{}.Type()
 }

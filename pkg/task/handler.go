@@ -18,6 +18,6 @@ package task
 
 type Handler interface {
 	Execute(t Task, p chan *Pipeline) Task
-	GetMaxConcurrency() int
-	GetTaskType() string
+	MaxConcurrent() int
+	Type() string
 }

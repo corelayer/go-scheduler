@@ -23,20 +23,25 @@ import (
 )
 
 type Task interface {
-	GetStatus() status.Status
-	GetTaskType() string
+	Name() string
+	Status() status.Status
+	Type() string
 	SetStatus(s status.Status) Task
 	WriteToPipeline() bool
 }
 
-func GetTaskAttr(t Task) slog.Attr {
+func LogTaskAttr(t Task) slog.Attr {
 	return slog.Group(
 		"task",
-		slog.String("name", t.GetTaskType()),
-		slog.String("status", t.GetStatus().String()),
+		slog.String("name", t.Name()),
+		slog.String("type", t.Type()),
+		slog.String("status", t.Status().String()),
 	)
 }
 
-func GetErrorAttr(err error) slog.Attr {
-	return slog.String("error", err.Error())
+func LogErrAttr(err error) slog.Attr {
+	return slog.Group(
+		"error",
+		slog.String("message", err.Error()),
+	)
 }

@@ -23,12 +23,12 @@ import (
 )
 
 const (
-	TIMELOG_TASKHANDLER_MAX_CONCURRENCY = 10000
+	MAX_CONCURRENT_TASKHANDLER_TIMELOG = 10000
 )
 
 func NewDefaultTimeLogTaskHandler() TimeLogTaskHandler {
 	return TimeLogTaskHandler{
-		maxConcurrency: TIMELOG_TASKHANDLER_MAX_CONCURRENCY,
+		maxConcurrency: MAX_CONCURRENT_TASKHANDLER_TIMELOG,
 	}
 }
 
@@ -57,21 +57,21 @@ func (h TimeLogTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	return task.SetStatus(status.StatusCompleted)
 }
 
-func (h TimeLogTaskHandler) GetMaxConcurrency() int {
+func (h TimeLogTaskHandler) MaxConcurrent() int {
 	return h.maxConcurrency
 }
 
-func (h TimeLogTaskHandler) GetTaskType() string {
-	return TimeLogTask{}.GetTaskType()
+func (h TimeLogTaskHandler) Type() string {
+	return TimeLogTask{}.Type()
 }
 
 func (h TimeLogTaskHandler) processTask(t TimeLogTask, p *Pipeline) TimeLogTask {
 	timestamp := time.Now()
 
 	p.Intercom.Add(Message{
-		Message: "current time",
+		Message: "time",
 		Type:    LogMessage,
-		Task:    t.GetTaskType(),
+		Task:    t.Name(),
 		Data:    timestamp,
 	})
 	t.Timestamp = timestamp

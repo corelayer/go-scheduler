@@ -28,11 +28,15 @@ type TimeLogTask struct {
 	status    status.Status
 }
 
-func (t TimeLogTask) GetStatus() status.Status {
+func (TimeLogTask) Name() string {
+	return "timelog"
+}
+
+func (t TimeLogTask) Status() status.Status {
 	return t.status
 }
 
-func (t TimeLogTask) GetTaskType() string {
+func (t TimeLogTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 

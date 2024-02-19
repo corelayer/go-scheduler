@@ -98,10 +98,15 @@ func main() {
 		cancel()
 	}
 
-	r.RegisterHandlerPool(task.NewHandlerPool(task.NewDefaultTimeLogTaskHandler()))
-	r.RegisterHandlerPool(task.NewHandlerPool(task.NewDefaultEmptyTaskHandler()))
-	r.RegisterHandlerPool(task.NewHandlerPool(task.NewDefaultSleepTaskHandler()))
-	r.RegisterHandlerPool(task.NewHandlerPool(task.NewDefaultPrintTaskHandler()))
+	err = r.RegisterHandlerPools([]*task.HandlerPool{
+		task.NewHandlerPool(task.NewDefaultTimeLogTaskHandler()),
+		task.NewHandlerPool(task.NewDefaultEmptyTaskHandler()),
+		task.NewHandlerPool(task.NewDefaultSleepTaskHandler()),
+		task.NewHandlerPool(task.NewDefaultPrintTaskHandler()),
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	i := 0
 	for {

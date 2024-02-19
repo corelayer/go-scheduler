@@ -23,30 +23,30 @@ import (
 )
 
 const (
-	PRINT_TASKHANDLER_MAX_CONCURRENCY = 10000
+	MAX_CONCURRENT_TASKHANDLER_PRINT = 10000
 )
 
 func NewDefaultPrintTaskHandler() PrintTaskHandler {
 	return PrintTaskHandler{
-		maxConcurrency: PRINT_TASKHANDLER_MAX_CONCURRENCY,
+		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_PRINT,
 	}
 }
 
-func NewPrintTaskHandler(maxConcurrency int) PrintTaskHandler {
+func NewPrintTaskHandler(maxConcurrent int) PrintTaskHandler {
 	return PrintTaskHandler{
-		maxConcurrency: maxConcurrency,
+		maxConcurrent: maxConcurrent,
 	}
 }
 
 type PrintTaskHandler struct {
-	maxConcurrency int
+	maxConcurrent int
 }
 
-func (h PrintTaskHandler) GetMaxConcurrency() int {
-	return h.maxConcurrency
+func (h PrintTaskHandler) MaxConcurrent() int {
+	return h.maxConcurrent
 }
-func (h PrintTaskHandler) GetTaskType() string {
-	return PrintTask{}.GetTaskType()
+func (h PrintTaskHandler) Type() string {
+	return PrintTask{}.Type()
 }
 
 func (h PrintTaskHandler) Execute(t Task, p chan *Pipeline) Task {
