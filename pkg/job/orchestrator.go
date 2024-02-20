@@ -20,7 +20,7 @@ import (
 	"context"
 )
 
-func NewOrchestrator(ctx context.Context, c OrchestratorConfig, jobs CatalogReadWriter) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, c OrchestratorConfig) (*Orchestrator, error) {
 	var (
 		err       error
 		scheduler *Scheduler
@@ -31,9 +31,9 @@ func NewOrchestrator(ctx context.Context, c OrchestratorConfig, jobs CatalogRead
 	chUpdate := make(chan Job, c.MaxJobs)
 
 	sc := NewSchedulerConfig(c.MaxJobs, c.StartupDelayMilliseconds, chRunner, chUpdate)
-	rc := NewRunnerConfig(c.MaxJobs, c.Repository, chRunner, chUpdate)
+	rc := NewRunnerConfig(c.MaxJobs, c.HandlerRepository, chRunner, chUpdate)
 
-	scheduler, err = NewScheduler(ctx, sc, jobs)
+	scheduler, err = NewScheduler(ctx, sc, c.Catalog)
 	if err != nil {
 		return nil, err
 	}
