@@ -43,6 +43,7 @@ type Scheduler struct {
 }
 
 func (s *Scheduler) run(ctx context.Context) {
+	time.Sleep(s.config.GetStartupDelayDuration())
 	queued := 0
 	for {
 		select {

@@ -30,7 +30,7 @@ func NewOrchestrator(ctx context.Context, c OrchestratorConfig, jobs CatalogRead
 	chRunner := make(chan Job, c.MaxJobs)
 	chUpdate := make(chan Job, c.MaxJobs)
 
-	sc := NewSchedulerConfig(c.MaxJobs, chRunner, chUpdate)
+	sc := NewSchedulerConfig(c.MaxJobs, c.StartupDelayMilliseconds, chRunner, chUpdate)
 	rc := NewRunnerConfig(c.MaxJobs, c.Repository, chRunner, chUpdate)
 
 	scheduler, err = NewScheduler(ctx, sc, jobs)

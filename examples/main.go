@@ -91,7 +91,7 @@ func main() {
 	r := task.NewHandlerRepository()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	config := job.NewOrchestratorConfig(2000, r)
+	config := job.NewOrchestratorConfig(2000, 2000, r)
 	_, err := job.NewOrchestrator(ctx, config, c)
 	if err != nil {
 		fmt.Println(err)

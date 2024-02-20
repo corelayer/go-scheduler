@@ -21,9 +21,10 @@ import (
 	"time"
 )
 
-func NewSchedulerConfig(maxJobs int, chRunner chan Job, chUpdate chan Job) SchedulerConfig {
+func NewSchedulerConfig(maxJobs int, startupDelayMilliseconds int, chRunner chan Job, chUpdate chan Job) SchedulerConfig {
 	return SchedulerConfig{
 		ScheduleDelayMilliseconds: 500,
+		StartupDelayMilliseconds:  startupDelayMilliseconds,
 		MaxJobs:                   maxJobs,
 		chRunner:                  chRunner,
 		chUpdate:                  chUpdate,
@@ -32,9 +33,15 @@ func NewSchedulerConfig(maxJobs int, chRunner chan Job, chUpdate chan Job) Sched
 
 type SchedulerConfig struct {
 	ScheduleDelayMilliseconds int
+	StartupDelayMilliseconds  int
 	MaxJobs                   int
 	chRunner                  chan Job
 	chUpdate                  chan Job
+}
+
+func (c SchedulerConfig) GetStartupDelayDuration() time.Duration {
+	d, _ := time.ParseDuration(strconv.Itoa(c.StartupDelayMilliseconds) + "ms")
+	return d
 }
 
 func (c SchedulerConfig) GetScheduleDelayDuration() time.Duration {
