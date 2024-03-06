@@ -50,13 +50,11 @@ func (h PrintTaskHandler) Type() string {
 }
 
 func (h PrintTaskHandler) Execute(t Task, p chan *Pipeline) Task {
-	select {
-	case pipeline := <-p:
-		fmt.Println(t.(PrintTask).Message)
+	pipeline := <-p
+	fmt.Println(t.(PrintTask).Message)
 
-		if t.WriteToPipeline() {
-			p <- pipeline
-		}
+	if t.WriteToPipeline() {
+		p <- pipeline
 	}
 
 	return t.SetStatus(status.StatusCompleted)

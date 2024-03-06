@@ -58,33 +58,33 @@ func createJob(i int) job.Job {
 	}
 }
 
-func createRepeatableJob(i int) job.Job {
-	id, _ := uuid.NewUUID()
-	schedule, _ := cron.NewSchedule("* * * * * *")
-	// rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	// d := rnd.Intn(1000)
-	tasks := []task.Task{
-		task.TimeLogTask{},
-		task.PrintTask{
-			Message: fmt.Sprintf("### Repeatable job %d - Print Task", i),
-		},
-		// task.SleepTask{
-		// 	Milliseconds: d,
-		// 	WriteOutput:  true,
-		// },
-		task.TimeLogTask{},
-	}
-
-	return job.Job{
-		Uuid:     id,
-		Enabled:  true,
-		Status:   status.StatusNone,
-		Schedule: schedule,
-		Repeat:   true,
-		Name:     "### Repeatable job " + strconv.Itoa(i),
-		Tasks:    task.NewSequence(tasks),
-	}
-}
+// func createRepeatableJob(i int) job.Job {
+// 	id, _ := uuid.NewUUID()
+// 	schedule, _ := cron.NewSchedule("* * * * * *")
+// 	// rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+// 	// d := rnd.Intn(1000)
+// 	tasks := []task.Task{
+// 		task.TimeLogTask{},
+// 		task.PrintTask{
+// 			Message: fmt.Sprintf("### Repeatable job %d - Print Task", i),
+// 		},
+// 		// task.SleepTask{
+// 		// 	Milliseconds: d,
+// 		// 	WriteOutput:  true,
+// 		// },
+// 		task.TimeLogTask{},
+// 	}
+//
+// 	return job.Job{
+// 		Uuid:     id,
+// 		Enabled:  true,
+// 		Status:   status.StatusNone,
+// 		Schedule: schedule,
+// 		Repeat:   true,
+// 		Name:     "### Repeatable job " + strconv.Itoa(i),
+// 		Tasks:    task.NewSequence(tasks),
+// 	}
+// }
 
 func main() {
 	c := job.NewMemoryCatalog()

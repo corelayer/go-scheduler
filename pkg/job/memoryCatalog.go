@@ -82,11 +82,7 @@ func (c *MemoryCatalog) GetArchivedJobs() []Job {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	var jobs = make([]Job, 0)
-	for _, job := range c.archive {
-		jobs = append(jobs, job)
-	}
-	return jobs
+	return c.archive
 }
 
 // ACTIVE JOB FUNCTIONS

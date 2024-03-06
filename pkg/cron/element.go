@@ -192,7 +192,7 @@ func (e *element) Trigger(t time.Time) bool {
 }
 
 func (e *element) isDue(inputs []int, t int) bool {
-	if inputs == nil || len(inputs) == 0 {
+	if len(inputs) == 0 {
 		return false
 	}
 

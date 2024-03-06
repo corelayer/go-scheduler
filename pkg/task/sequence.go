@@ -34,7 +34,7 @@ type Sequence struct {
 	mux       *sync.Mutex
 }
 
-func (s Sequence) ActiveTask() Task {
+func (s *Sequence) ActiveTask() Task {
 	if s.IsActive() {
 		s.mux.Lock()
 		defer s.mux.Unlock()
@@ -43,32 +43,35 @@ func (s Sequence) ActiveTask() Task {
 	return nil
 }
 
-func (s Sequence) ActiveIndex() int {
+func (s *Sequence) ActiveIndex() int {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
 	return s.activeIdx
 }
 
-func (s Sequence) All() []Task {
+func (s *Sequence) All() []Task {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
 	return s.tasks
 }
 
-func (s Sequence) Count() int {
+func (s *Sequence) Count() int {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
 	return len(s.tasks)
 }
 
-func (s Sequence) Execute(r *HandlerRepository, c *Intercom) {
+func (s *Sequence) Execute(r *HandlerRepository, c *Intercom) {
 	pipeline := make(chan *Pipeline, 1)
 	defer close(pipeline)
 
+	s.mux.Lock()
 	s.active = true
+	s.mux.Unlock()
+
 	pipeline <- &Pipeline{Intercom: c}
 
 	for i, t := range s.tasks {
@@ -83,22 +86,22 @@ func (s Sequence) Execute(r *HandlerRepository, c *Intercom) {
 		s.mux.Unlock()
 	}
 
+	s.mux.Lock()
 	s.active = false
+	s.mux.Unlock()
 }
 
-func (s Sequence) IsActive() bool {
+func (s *Sequence) IsActive() bool {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
 	return s.active
 }
 
-func (s Sequence) RegisterTask(t Task) Sequence {
+func (s *Sequence) RegisterTask(t Task) {
 	s.tasks = append(s.tasks, t)
-	return s
 }
 
-func (s Sequence) RegisterTasks(t []Task) Sequence {
+func (s *Sequence) RegisterTasks(t []Task) {
 	s.tasks = append(s.tasks, t...)
-	return s
 }

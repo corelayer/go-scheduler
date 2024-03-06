@@ -25,6 +25,7 @@ import (
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
 	"github.com/corelayer/go-scheduler/pkg/status"
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
 func TestNewMemoryCatalog(t *testing.T) {
@@ -46,7 +47,7 @@ func TestMemoryCatalog_Add(t *testing.T) {
 	r.Register(Job{
 		Uuid:   uuid.New(),
 		Name:   "test",
-		Tasks:  TaskSequence{},
+		Tasks:  task.Sequence{},
 		Status: status.StatusNone,
 	})
 }
@@ -100,14 +101,14 @@ func TestMemoryCatalog_Update(t *testing.T) {
 	r.Register(Job{
 		Uuid:   id,
 		Name:   "test1",
-		Tasks:  TaskSequence{},
+		Tasks:  task.Sequence{},
 		Status: status.StatusNone,
 	})
 
 	r.UpdateActiveJob(Job{
 		Uuid:   id,
 		Name:   "testUpdated",
-		Tasks:  TaskSequence{},
+		Tasks:  task.Sequence{},
 		Status: status.StatusPending,
 	})
 
@@ -128,14 +129,14 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 	r.Register(Job{
 		Uuid:   uuid1,
 		Name:   "test1",
-		Tasks:  TaskSequence{},
+		Tasks:  task.Sequence{},
 		Status: status.StatusNone,
 	})
 
 	r.UpdateActiveJob(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
-		Tasks:  TaskSequence{},
+		Tasks:  task.Sequence{},
 		Status: status.StatusCompleted,
 	})
 
@@ -199,7 +200,7 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 		r.Register(Job{
 			Uuid:     id[i],
 			Name:     "testJob",
-			Tasks:    TaskSequence{},
+			Tasks:    task.Sequence{},
 			Status:   status.StatusNone,
 			Schedule: s,
 			Enabled:  false,
@@ -215,7 +216,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 	r.Register(Job{
 		Uuid:     id,
 		Name:     "testJob",
-		Tasks:    TaskSequence{},
+		Tasks:    task.Sequence{},
 		Status:   status.StatusNone,
 		Schedule: s,
 		Enabled:  false,
@@ -226,7 +227,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 		r.UpdateActiveJob(Job{
 			Uuid:   id,
 			Name:   "a",
-			Tasks:  TaskSequence{},
+			Tasks:  task.Sequence{},
 			Status: status.StatusPending,
 		})
 	}
