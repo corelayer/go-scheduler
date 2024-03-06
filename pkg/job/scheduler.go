@@ -17,57 +17,88 @@
 package job
 
 import (
-	"context"
-	"fmt"
-	"time"
+	"sync"
 )
 
-func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogReadWriter) (*Scheduler, error) {
-	if catalog == nil {
-		return nil, fmt.Errorf("invalid catalog")
+func NewScheduler() *Scheduler {
+	return &Scheduler{
+		repository: NewRepository(),
+		mux:        sync.Mutex{},
 	}
-
-	s := &Scheduler{
-		config:  config,
-		catalog: catalog,
-	}
-	go s.run(ctx)
-	return s, nil
 }
 
 type Scheduler struct {
-	config  SchedulerConfig
-	catalog CatalogReadWriter
+	repository *Repository
+	mux        sync.Mutex
 }
 
-func (s *Scheduler) run(ctx context.Context) {
-	time.Sleep(s.config.GetStartupDelayDuration())
-	queued := 0
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case job := <-s.config.chUpdate:
-			if job.Status == StatusCompleted || job.Status == StatusError {
-				queued--
-			}
-			s.catalog.UpdateActiveJob(job)
-		default:
-			time.Sleep(s.config.GetScheduleDelayDuration())
-			jobs := s.catalog.GetActiveJobs()
-			for _, job := range jobs {
-				if queued < s.config.MaxJobs {
-					if job.Status == StatusNone && job.IsDue() {
-						job.SetStatus(StatusPending)
-						s.catalog.UpdateActiveJob(job)
+func (s *Scheduler) Add(job Job) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
 
-						s.config.chRunner <- job
-						queued++
-					}
-				} else {
-					break
-				}
-			}
+	return s.repository.Add(job)
+}
+
+func (s *Scheduler) Runnable() []Job {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	var jobs = make([]Job, 0)
+	available := s.repository.All()
+	for _, job := range available {
+		if job.IsRunnable() {
+			jobs = append(jobs, job)
 		}
 	}
+	return jobs
 }
+
+// func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogReadWriter) (*Scheduler, error) {
+// 	if catalog == nil {
+// 		return nil, fmt.Errorf("invalid catalog")
+// 	}
+//
+// 	s := &Scheduler{
+// 		config:  config,
+// 		catalog: catalog,
+// 	}
+// 	go s.run(ctx)
+// 	return s, nil
+// }
+//
+// type Scheduler struct {
+// 	config  SchedulerConfig
+// 	catalog CatalogReadWriter
+// }
+//
+// func (s *Scheduler) run(ctx context.Context) {
+// 	time.Sleep(s.config.GetStartupDelayDuration())
+// 	queued := 0
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			return
+// 		case job := <-s.config.chUpdate:
+// 			if job.Status == StatusCompleted || job.Status == StatusError {
+// 				queued--
+// 			}
+// 			s.catalog.UpdateActiveJob(job)
+// 		default:
+// 			time.Sleep(s.config.GetScheduleDelayDuration())
+// 			jobs := s.catalog.GetActiveJobs()
+// 			for _, job := range jobs {
+// 				if queued < s.config.MaxJobs {
+// 					if job.Status == StatusNone && job.IsDue() {
+// 						job.SetStatus(StatusPending)
+// 						s.catalog.UpdateActiveJob(job)
+//
+// 						s.config.chRunner <- job
+// 						queued++
+// 					}
+// 				} else {
+// 					break
+// 				}
+// 			}
+// 		}
+// 	}
+// }

@@ -18,40 +18,64 @@ package job
 
 import (
 	"context"
-	"fmt"
+	"sync"
 )
 
-func NewRunner(ctx context.Context, config RunnerConfig) (*Runner, error) {
-	if config.Repository == nil {
-		return nil, fmt.Errorf("invalid repository in RunnerConfig")
+func NewRunner() *Runner {
+	return &Runner{
+		repository: NewRepository(),
+		mux:        sync.Mutex{},
 	}
-
-	r := &Runner{
-		config: config,
-		// chQueue:         make(chan Job),
-		// chWorkerUpdates: make(chan Job),
-	}
-
-	workers := make([]*Worker, config.MaxJobs)
-	for i := 0; i < config.MaxJobs; i++ {
-		// Create worker config
-		wc, err := NewWorkerConfig(i, config.Repository)
-		if err != nil {
-			return nil, err
-		}
-
-		// Create worker to add to the pool
-		workers[i], err = NewWorker(ctx, wc, r.config.chInput, r.config.chOutput)
-		if err != nil {
-			return nil, err
-		}
-	}
-	r.workers = workers
-	return r, nil
-
 }
 
 type Runner struct {
-	config  RunnerConfig
-	workers []*Worker
+	repository *Repository
+	workers    []*Worker
+	mux        sync.Mutex
 }
+
+func (r *Runner) Add(job Job) error {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+
+	return r.repository.Add(job)
+}
+
+func (r *Runner) Run(ctx context.Context) {
+
+}
+
+// func NewRunner(ctx context.Context, config RunnerConfig) (*Runner, error) {
+// 	if config.Repository == nil {
+// 		return nil, fmt.Errorf("invalid repository in RunnerConfig")
+// 	}
+//
+// 	r := &Runner{
+// 		config: config,
+// 		// chQueue:         make(chan Job),
+// 		// chWorkerUpdates: make(chan Job),
+// 	}
+//
+// 	workers := make([]*Worker, config.MaxJobs)
+// 	for i := 0; i < config.MaxJobs; i++ {
+// 		// Create worker config
+// 		wc, err := NewWorkerConfig(i, config.Repository)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+//
+// 		// Create worker to add to the pool
+// 		workers[i], err = NewWorker(ctx, wc, r.config.chInput, r.config.chOutput)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	r.workers = workers
+// 	return r, nil
+//
+// }
+//
+// type Runner struct {
+// 	config  RunnerConfig
+// 	workers []*Worker
+// }
