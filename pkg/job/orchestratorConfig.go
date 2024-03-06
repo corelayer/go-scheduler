@@ -16,24 +16,20 @@
 
 package job
 
-// func NewOrchestratorConfig(maxJobs int, startupDelayMilliseconds int, c CatalogReadWriter, r *task.HandlerRepository) OrchestratorConfig {
-// 	return OrchestratorConfig{
-// 		MaxJobs:                  maxJobs,
-// 		StartupDelayMilliseconds: startupDelayMilliseconds,
-// 		Catalog:                  c,
-// 		HandlerRepository:        r,
-// 	}
-// }
-//
-// type OrchestratorConfig struct {
-// 	MaxJobs                  int
-// 	StartupDelayMilliseconds int
-// 	Catalog                  CatalogReadWriter
-// 	HandlerRepository        *task.HandlerRepository
-// }
+import "github.com/corelayer/go-scheduler/pkg/task"
+
+func NewOrchestratorConfig(maxJobs int, interval int, errF func(err error), msgF func(msg task.Message)) OrchestratorConfig {
+	return OrchestratorConfig{
+		MaxJobs:          maxJobs,
+		ScheduleInterval: interval,
+		ErrorHandler:     errF,
+		MessageHandler:   msgF,
+	}
+}
 
 type OrchestratorConfig struct {
 	MaxJobs          int
 	ScheduleInterval int
 	ErrorHandler     func(err error)
+	MessageHandler   func(msg task.Message)
 }

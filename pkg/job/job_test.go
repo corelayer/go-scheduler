@@ -16,28 +16,25 @@
 
 package job
 
-import (
-	"testing"
-)
-
-func TestJob_IsPending1(t *testing.T) {
-	j := Job{
-		Enabled: false,
-		Status:  StatusNone,
-	}
-
-	if j.IsPending() {
-		t.Errorf("job is pending, expected %s", StatusNone)
-	}
-}
-
-func TestJob_IsPending2(t *testing.T) {
-	j := Job{
-		Enabled: true,
-		Status:  StatusPending,
-	}
-
-	if !j.IsPending() {
-		t.Errorf("job is %s, expected %s", j.Status, StatusPending)
-	}
-}
+//
+// func TestJob_IsPending1(t *testing.T) {
+// 	j := Job{
+// 		Enabled: false,
+// 		Status:  StatusNone,
+// 	}
+//
+// 	if j.IsPending() {
+// 		t.Errorf("job is pending, expected %s", StatusNone)
+// 	}
+// }
+//
+// func TestJob_IsPending2(t *testing.T) {
+// 	j := Job{
+// 		Enabled: true,
+// 		Status:  StatusPending,
+// 	}
+//
+// 	if !j.IsPending() {
+// 		t.Errorf("job is %s, expected %s", j.Status, StatusPending)
+// 	}
+// }

@@ -22,15 +22,27 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
-func NewJob(name string, s cron.Schedule, maxRuns int) Job {
+type Result struct {
+	start    time.Time
+	finish   time.Time
+	runTime  time.Duration
+	status   Status
+	messages []task.Message
+}
+
+func NewJob(name string, s cron.Schedule, maxRuns int, tasks task.Sequence) Job {
 	return Job{
 		id:       uuid.New(),
 		name:     name,
 		enabled:  true,
 		schedule: s,
 		maxRuns:  maxRuns,
+		status:   StatusInactive,
+		results:  make([]Result, 0),
+		tasks:    tasks,
 	}
 }
 
@@ -40,15 +52,20 @@ type Job struct {
 	enabled  bool
 	schedule cron.Schedule
 	maxRuns  int
-
-	scheduledTime  time.Time
-	activationTime time.Time
-	completedTime  time.Time
-	runTime        time.Duration
+	status   Status
+	results  []Result
+	tasks    task.Sequence
 }
 
-func (j *Job) Activate() {
-	j.activationTime = time.Now()
+func (j *Job) AddResult(r Result) {
+	j.results = append(j.results, r)
+}
+func (j *Job) CountRuns() int {
+	return len(j.results)
+}
+
+func (j *Job) CurrentResult() Result {
+	return j.results[len(j.results)-1]
 }
 
 func (j *Job) Disable() {
@@ -58,123 +75,43 @@ func (j *Job) Disable() {
 func (j *Job) Enable() {
 	j.enabled = true
 }
-func (j *Job) Enabled() bool {
+
+func (j *Job) IsAvailable() bool {
+	return j.status == StatusAvailable
+}
+
+func (j *Job) IsEnabled() bool {
 	return j.enabled
 }
 
-func (j *Job) IsRunnable() bool {
-	if !j.enabled {
-		return false
+func (j *Job) IsInactive() bool {
+	if j.maxRuns == 0 {
+		return j.enabled && j.status == StatusInactive
 	}
 
-	if j.schedule.IsDue(time.Now()) {
-		return true
+	if len(j.results) < j.maxRuns {
+		return j.enabled && j.status == StatusInactive
 	}
+
 	return false
 }
 
-func (j *Job) Finish() {
-	j.completedTime = time.Now()
+func (j *Job) IsRunnable() bool {
+	return j.status == StatusRunnable
 }
 
-//
-// import (
-// 	"time"
-//
-// 	"github.com/google/uuid"
-//
-// 	"github.com/corelayer/go-scheduler/pkg/cron"
-// 	"github.com/corelayer/go-scheduler/pkg/task"
-// )
-//
-// func NewJob(id uuid.UUID, name string, enabled bool, schedule cron.Schedule, tasks []task.Task) Job {
-// 	return Job{
-// 		Uuid:     id,
-// 		Name:     name,
-// 		Enabled:  enabled,
-// 		Status:   StatusNone,
-// 		Schedule: schedule,
-// 		Repeat:   false,
-// 		Tasks:    task.NewSequence(tasks),
-// 		Intercom: task.NewIntercom(),
-// 	}
-// }
-//
-// type Job struct {
-// 	Uuid     uuid.UUID
-// 	Name     string
-// 	Enabled  bool
-// 	Status   Status
-// 	Schedule cron.Schedule
-// 	Repeat   bool
-// 	Tasks    task.Sequence
-// 	Intercom *task.Intercom
-// }
-//
-// func (j *Job) IsDue() bool {
-// 	if !j.Enabled {
-// 		return false
-// 	}
-//
-// 	if j.Schedule.IsDue(time.Now()) {
-// 		return true
-// 	}
-// 	return false
-// }
-//
-// func (j *Job) IsPending() bool {
-// 	return j.Status == StatusPending
-// }
-//
-// func (j *Job) SetStatus(status Status) {
-// 	j.Status = status
-// }
-//
-// func (j *Job) SetTaskSequence(s task.Sequence) {
-// 	j.Tasks = s
-// }
-//
-// // TODO Definition rename to Job
-// type Definition struct {
-// 	Uuid     uuid.UUID
-// 	Name     string
-// 	Enabled  bool
-// 	Status   Status
-// 	Schedule cron.Schedule
-// 	Repeat   bool
-// 	MaxRuns  int // 0 = unlimited runs per schedule
-// 	Tasks    task.Sequence
-// }
-//
-// func (j *Definition) Disable() {
-// 	j.Enabled = false
-// }
-//
-// func (j *Definition) Enable() {
-// 	j.Enabled = true
-// }
-//
-// type Schedulable struct {
-// 	Uuid     uuid.UUID
-// 	Name     string
-// 	Schedule cron.Schedule
-// 	Tasks    task.Sequence
-// }
-//
-// type Active struct {
-// 	JobUuid  uuid.UUID
-// 	RunUuid  uuid.UUID
-// 	Name     string
-// 	Status   Status
-// 	Tasks    task.Sequence
-// 	Intercom *task.Intercom
-// }
-//
-// type Result struct {
-// 	JobUuid  uuid.UUID
-// 	RunUuid  uuid.UUID
-// 	Name     string
-// 	Status   Status
-// 	Tasks    task.Sequence
-// 	Intercom task.Intercom
-// }
+func (j *Job) IsSchedulable() bool {
+	return j.status == StatusSchedulable && j.schedule.IsDue(time.Now())
+}
+
+func (j *Job) Results() []Result {
+	return j.results
+}
+
+func (j *Job) UpdateResult(r Result) {
+	j.results[len(j.results)-1] = r
+}
+
+func (j *Job) SetStatus(s Status) {
+	j.status = s
+}

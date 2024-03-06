@@ -60,13 +60,6 @@ func (r *Repository) Add(job Job) error {
 	return nil
 }
 
-func (r *Repository) All() map[uuid.UUID]Job {
-	r.mux.Lock()
-	defer r.mux.Unlock()
-
-	return r.data
-}
-
 func (r *Repository) Count() int {
 	r.mux.Lock()
 	defer r.mux.Unlock()
@@ -106,6 +99,13 @@ func (r *Repository) Get(id uuid.UUID) (Job, error) {
 	}
 
 	return r.data[id], nil
+}
+
+func (r *Repository) GetAll() map[uuid.UUID]Job {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+
+	return r.data
 }
 
 func (r *Repository) Update(job Job) error {

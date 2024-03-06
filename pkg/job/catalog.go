@@ -16,22 +16,17 @@
 
 package job
 
-// type CatalogReadWriter interface {
-// 	CatalogReader
-// 	CatalogWriter
-// }
-//
-// type CatalogReader interface {
-// 	CountArchivedJobs() int
-// 	CountRegisteredJobs() int
-// 	CountActiveJobs() int
-// 	GetArchivedJobs() []Job
-// 	GetActiveJobs() []Job
-// 	GetRegisteredJobs() []Job
-// }
-//
-// type CatalogWriter interface {
-// 	Register(job Job)
-// 	UpdateActiveJob(job Job)
-// 	Unregister(uuid uuid.UUID)
-// }
+import "github.com/google/uuid"
+
+type Catalog interface {
+	Add(job Job) error
+	All() map[uuid.UUID]Job
+	AvailableJobs() []Job
+	Delete(jobId uuid.UUID) error
+	Disable(jobId uuid.UUID) error
+	Enable(jobId uuid.UUID) error
+	InactiveJobs() []Job
+	RunnableJobs() []Job
+	SchedulableJobs() []Job
+	Update(job Job) error
+}
