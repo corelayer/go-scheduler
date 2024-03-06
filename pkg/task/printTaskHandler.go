@@ -18,8 +18,6 @@ package task
 
 import (
 	"fmt"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 const (
@@ -57,5 +55,5 @@ func (h PrintTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 		p <- pipeline
 	}
 
-	return t.SetStatus(status.StatusCompleted)
+	return t.SetStatus(StatusCompleted)
 }

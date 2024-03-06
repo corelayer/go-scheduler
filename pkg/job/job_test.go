@@ -18,28 +18,26 @@ package job
 
 import (
 	"testing"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 func TestJob_IsPending1(t *testing.T) {
 	j := Job{
 		Enabled: false,
-		Status:  status.StatusNone,
+		Status:  StatusNone,
 	}
 
 	if j.IsPending() {
-		t.Errorf("job is pending, expected %s", status.StatusNone)
+		t.Errorf("job is pending, expected %s", StatusNone)
 	}
 }
 
 func TestJob_IsPending2(t *testing.T) {
 	j := Job{
 		Enabled: true,
-		Status:  status.StatusPending,
+		Status:  StatusPending,
 	}
 
 	if !j.IsPending() {
-		t.Errorf("job is %s, expected %s", j.Status, status.StatusPending)
+		t.Errorf("job is %s, expected %s", j.Status, StatusPending)
 	}
 }

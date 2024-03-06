@@ -24,7 +24,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
-	"github.com/corelayer/go-scheduler/pkg/status"
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
@@ -48,7 +47,7 @@ func TestMemoryCatalog_Add(t *testing.T) {
 		Uuid:   uuid.New(),
 		Name:   "test",
 		Tasks:  task.Sequence{},
-		Status: status.StatusNone,
+		Status: StatusNone,
 	})
 }
 
@@ -102,14 +101,14 @@ func TestMemoryCatalog_Update(t *testing.T) {
 		Uuid:   id,
 		Name:   "test1",
 		Tasks:  task.Sequence{},
-		Status: status.StatusNone,
+		Status: StatusNone,
 	})
 
 	r.UpdateActiveJob(Job{
 		Uuid:   id,
 		Name:   "testUpdated",
 		Tasks:  task.Sequence{},
-		Status: status.StatusPending,
+		Status: StatusPending,
 	})
 
 	r.mux.Lock()
@@ -130,14 +129,14 @@ func TestMemoryCatalog_Update2(t *testing.T) {
 		Uuid:   uuid1,
 		Name:   "test1",
 		Tasks:  task.Sequence{},
-		Status: status.StatusNone,
+		Status: StatusNone,
 	})
 
 	r.UpdateActiveJob(Job{
 		Uuid:   uuid.New(),
 		Name:   "testUpdated",
 		Tasks:  task.Sequence{},
-		Status: status.StatusCompleted,
+		Status: StatusCompleted,
 	})
 
 	r.mux.Lock()
@@ -201,7 +200,7 @@ func BenchmarkMemoryCatalog_Add(b *testing.B) {
 			Uuid:     id[i],
 			Name:     "testJob",
 			Tasks:    task.Sequence{},
-			Status:   status.StatusNone,
+			Status:   StatusNone,
 			Schedule: s,
 			Enabled:  false,
 		})
@@ -217,7 +216,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 		Uuid:     id,
 		Name:     "testJob",
 		Tasks:    task.Sequence{},
-		Status:   status.StatusNone,
+		Status:   StatusNone,
 		Schedule: s,
 		Enabled:  false,
 	})
@@ -228,7 +227,7 @@ func BenchmarkMemoryCatalog_Update(b *testing.B) {
 			Uuid:   id,
 			Name:   "a",
 			Tasks:  task.Sequence{},
-			Status: status.StatusPending,
+			Status: StatusPending,
 		})
 	}
 }

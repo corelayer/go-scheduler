@@ -20,8 +20,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 func NewScheduler(ctx context.Context, config SchedulerConfig, catalog CatalogReadWriter) (*Scheduler, error) {
@@ -50,7 +48,7 @@ func (s *Scheduler) run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case job := <-s.config.chUpdate:
-			if job.Status == status.StatusCompleted || job.Status == status.StatusError {
+			if job.Status == StatusCompleted || job.Status == StatusError {
 				queued--
 			}
 			s.catalog.UpdateActiveJob(job)
@@ -59,8 +57,8 @@ func (s *Scheduler) run(ctx context.Context) {
 			jobs := s.catalog.GetActiveJobs()
 			for _, job := range jobs {
 				if queued < s.config.MaxJobs {
-					if job.Status == status.StatusNone && job.IsDue() {
-						job.SetStatus(status.StatusPending)
+					if job.Status == StatusNone && job.IsDue() {
+						job.SetStatus(StatusPending)
 						s.catalog.UpdateActiveJob(job)
 
 						s.config.chRunner <- job

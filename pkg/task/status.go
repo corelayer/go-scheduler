@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CoreLayer BV
+ * Copyright 2023 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,33 +16,16 @@
 
 package task
 
-import (
-	"reflect"
-	"time"
+type Status int
+
+func (s Status) String() string {
+	return [...]string{"none", "pending", "completed", "error", "canceled"}[s]
+}
+
+const (
+	StatusNone Status = iota
+	StatusPending
+	StatusCompleted
+	StatusError
+	StatusCanceled
 )
-
-type TimeLogTask struct {
-	Timestamp time.Time
-	status    Status
-}
-
-func (TimeLogTask) Name() string {
-	return "timelog"
-}
-
-func (t TimeLogTask) Status() Status {
-	return t.status
-}
-
-func (t TimeLogTask) Type() string {
-	return reflect.TypeOf(t).String()
-}
-
-func (t TimeLogTask) SetStatus(s Status) Task {
-	t.status = s
-	return t
-}
-
-func (t TimeLogTask) WriteToPipeline() bool {
-	return true
-}

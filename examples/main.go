@@ -11,7 +11,6 @@ import (
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
 	"github.com/corelayer/go-scheduler/pkg/job"
-	"github.com/corelayer/go-scheduler/pkg/status"
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
@@ -49,7 +48,7 @@ func createJob(i int) job.Job {
 	return job.Job{
 		Uuid:     id,
 		Enabled:  true,
-		Status:   status.StatusNone,
+		Status:   job.StatusNone,
 		Schedule: schedule,
 		Repeat:   false,
 		Name:     "Example Job " + strconv.Itoa(i),

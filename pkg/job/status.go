@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package status
+package job
 
 type Status int
 

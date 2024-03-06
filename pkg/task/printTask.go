@@ -18,20 +18,18 @@ package task
 
 import (
 	"reflect"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type PrintTask struct {
 	Message string
-	status  status.Status
+	status  Status
 }
 
 func (t PrintTask) Name() string {
 	return "print"
 }
 
-func (t PrintTask) Status() status.Status {
+func (t PrintTask) Status() Status {
 	return t.status
 }
 
@@ -39,7 +37,7 @@ func (t PrintTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 
-func (t PrintTask) SetStatus(s status.Status) Task {
+func (t PrintTask) SetStatus(s Status) Task {
 	t.status = s
 	return t
 }

@@ -22,7 +22,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
-	"github.com/corelayer/go-scheduler/pkg/status"
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
@@ -31,7 +30,7 @@ func NewJob(id uuid.UUID, name string, enabled bool, schedule cron.Schedule, tas
 		Uuid:     id,
 		Name:     name,
 		Enabled:  enabled,
-		Status:   status.StatusNone,
+		Status:   StatusNone,
 		Schedule: schedule,
 		Repeat:   false,
 		Tasks:    task.NewSequence(tasks),
@@ -43,7 +42,7 @@ type Job struct {
 	Uuid     uuid.UUID
 	Name     string
 	Enabled  bool
-	Status   status.Status
+	Status   Status
 	Schedule cron.Schedule
 	Repeat   bool
 	Tasks    task.Sequence
@@ -62,10 +61,10 @@ func (j *Job) IsDue() bool {
 }
 
 func (j *Job) IsPending() bool {
-	return j.Status == status.StatusPending
+	return j.Status == StatusPending
 }
 
-func (j *Job) SetStatus(status status.Status) {
+func (j *Job) SetStatus(status Status) {
 	j.Status = status
 }
 

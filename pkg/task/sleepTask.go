@@ -18,20 +18,18 @@ package task
 
 import (
 	"reflect"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type SleepTask struct {
 	Milliseconds int
-	status       status.Status
+	status       Status
 }
 
 func (t SleepTask) Name() string {
 	return "sleep"
 }
 
-func (t SleepTask) Status() status.Status {
+func (t SleepTask) Status() Status {
 	return t.status
 }
 
@@ -39,7 +37,7 @@ func (t SleepTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 
-func (t SleepTask) SetStatus(s status.Status) Task {
+func (t SleepTask) SetStatus(s Status) Task {
 	t.status = s
 	return t
 }

@@ -18,8 +18,6 @@ package task
 
 import (
 	"time"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 const (
@@ -54,7 +52,7 @@ func (h TimeLogTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	default:
 	}
 
-	return task.SetStatus(status.StatusCompleted)
+	return task.SetStatus(StatusCompleted)
 }
 
 func (h TimeLogTaskHandler) MaxConcurrent() int {

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package status
+package task
 
 import "testing"
 

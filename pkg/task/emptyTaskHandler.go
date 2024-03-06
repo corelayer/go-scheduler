@@ -16,8 +16,6 @@
 
 package task
 
-import "github.com/corelayer/go-scheduler/pkg/status"
-
 const (
 	MAX_CONCURRENT_TASKHANDLER_EMPTY = 10000
 )
@@ -46,7 +44,7 @@ func (h EmptyTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 		}
 	default:
 	}
-	return t.SetStatus(status.StatusCompleted)
+	return t.SetStatus(StatusCompleted)
 }
 
 func (h EmptyTaskHandler) MaxConcurrent() int {

@@ -19,8 +19,6 @@ package task
 import (
 	"strconv"
 	"time"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 const (
@@ -55,7 +53,7 @@ func (h SleepTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	default:
 	}
 
-	return t.SetStatus(status.StatusCompleted)
+	return t.SetStatus(StatusCompleted)
 }
 
 func (h SleepTaskHandler) MaxConcurrent() int {

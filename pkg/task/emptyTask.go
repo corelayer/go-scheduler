@@ -18,19 +18,17 @@ package task
 
 import (
 	"reflect"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type EmptyTask struct {
-	status status.Status
+	status Status
 }
 
 func (t EmptyTask) Name() string {
 	return "empty"
 }
 
-func (t EmptyTask) Status() status.Status {
+func (t EmptyTask) Status() Status {
 	return t.status
 }
 
@@ -38,7 +36,7 @@ func (t EmptyTask) Type() string {
 	return reflect.TypeOf(EmptyTask{}).String()
 }
 
-func (t EmptyTask) SetStatus(s status.Status) Task {
+func (t EmptyTask) SetStatus(s Status) Task {
 	t.status = s
 	return t
 }

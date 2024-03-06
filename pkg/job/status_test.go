@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CoreLayer BV
+ * Copyright 2023 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,35 +14,23 @@
  *    limitations under the License.
  */
 
-package task
+package job
 
-import (
-	"reflect"
-	"time"
-)
+import "testing"
 
-type TimeLogTask struct {
-	Timestamp time.Time
-	status    Status
-}
+func TestStatus_String(t *testing.T) {
+	var (
+		result []string
+		wanted = []string{"none", "pending", "completed", "error", "canceled"}
+	)
 
-func (TimeLogTask) Name() string {
-	return "timelog"
-}
+	for i := 0; i < len(wanted); i++ {
+		result = append(result, Status(i).String())
+	}
 
-func (t TimeLogTask) Status() Status {
-	return t.status
-}
-
-func (t TimeLogTask) Type() string {
-	return reflect.TypeOf(t).String()
-}
-
-func (t TimeLogTask) SetStatus(s Status) Task {
-	t.status = s
-	return t
-}
-
-func (t TimeLogTask) WriteToPipeline() bool {
-	return true
+	for j := 0; j < len(wanted); j++ {
+		if result[j] != wanted[j] {
+			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
+		}
+	}
 }

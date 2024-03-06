@@ -18,15 +18,13 @@ package task
 
 import (
 	"log/slog"
-
-	"github.com/corelayer/go-scheduler/pkg/status"
 )
 
 type Task interface {
 	Name() string
-	Status() status.Status
+	Status() Status
 	Type() string
-	SetStatus(s status.Status) Task
+	SetStatus(s Status) Task
 	WriteToPipeline() bool
 }
 

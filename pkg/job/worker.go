@@ -22,7 +22,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/corelayer/go-scheduler/pkg/status"
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
@@ -86,9 +85,9 @@ func (w *Worker) run(ctx context.Context) {
 			job.Tasks.Execute(w.Config.repository, job.Intercom)
 
 			if job.Intercom.HasErrors() {
-				job.SetStatus(status.StatusError)
+				job.SetStatus(StatusError)
 			} else {
-				job.SetStatus(status.StatusCompleted)
+				job.SetStatus(StatusCompleted)
 			}
 			w.chUpdate <- job
 		}
