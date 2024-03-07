@@ -29,7 +29,7 @@ func NewOrchestratorConfig(maxJobs int, interval int, errF func(err error), msgF
 
 type OrchestratorConfig struct {
 	MaxJobs          int
-	ScheduleInterval int
+	ScheduleInterval int // milliseconds
 	ErrorHandler     func(err error)
 	MessageHandler   func(msg task.IntercomMessage)
 }

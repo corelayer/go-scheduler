@@ -15,7 +15,7 @@ import (
 func createJob(i int) job.Job {
 	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	d := rnd.Intn(100)
+	// d := rnd.Intn(100)
 	m := rnd.Intn(5) + 1
 	tasks := []task.Task{
 		// task.TimeLogTask{},
@@ -25,9 +25,9 @@ func createJob(i int) job.Job {
 		// 	WriteOutput: false,
 		// },
 		// task.EmptyTask{},
-		task.SleepTask{
-			Milliseconds: d,
-		},
+		// task.SleepTask{
+		// 	Milliseconds: d,
+		// },
 		// task.PrintTask{
 		// 	Message:     fmt.Sprintf("Job %d - Task 2", i),
 		// 	ReadInput:   true,
@@ -43,7 +43,7 @@ func createJob(i int) job.Job {
 		// task.TimeLogTask{},
 	}
 
-	if i%100 == 0 {
+	if i%20 == 0 {
 		tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
 	}
 
@@ -63,7 +63,7 @@ func main() {
 	r := task.NewHandlerRepository()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	config := job.NewOrchestratorConfig(10, 1, handleError, nil)
+	config := job.NewOrchestratorConfig(1000, 1, handleError, handleMessage)
 	o := job.NewOrchestrator(c, r, config)
 
 	err := r.RegisterHandlerPools([]*task.HandlerPool{
@@ -97,7 +97,7 @@ func main() {
 		if j.IsEnabled() {
 			fmt.Println(j.Name)
 		} else {
-			results := j.Results()
+			results := j.AllResults()
 			fmt.Println(j.Name)
 			for _, r := range results {
 				fmt.Println("\t", r.RunTime, r.Status)

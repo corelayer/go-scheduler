@@ -52,11 +52,11 @@ func (r *Repository) Add(job Job) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[job.id]; found {
+	if _, found := r.data[job.Uuid]; found {
 		return ErrExist
 	}
 
-	r.data[job.id] = job
+	r.data[job.Uuid] = job
 	return nil
 }
 
@@ -112,10 +112,10 @@ func (r *Repository) Update(job Job) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[job.id]; !found {
+	if _, found := r.data[job.Uuid]; !found {
 		return ErrNotFound
 	}
 
-	r.data[job.id] = job
+	r.data[job.Uuid] = job
 	return nil
 }

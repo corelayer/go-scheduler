@@ -27,90 +27,90 @@ import (
 
 func NewJob(name string, s cron.Schedule, maxRuns int, tasks task.Sequence) Job {
 	return Job{
-		id:       uuid.New(),
+		Uuid:     uuid.New(),
 		Name:     name,
-		enabled:  true,
-		schedule: s,
-		maxRuns:  maxRuns,
-		status:   StatusInactive,
-		results:  make([]Result, 0),
-		tasks:    tasks,
+		Enabled:  true,
+		Schedule: s,
+		MaxRuns:  maxRuns,
+		Status:   StatusInactive,
+		Results:  make([]Result, 0),
+		Tasks:    tasks,
 	}
 }
 
 type Job struct {
-	id       uuid.UUID
+	Uuid     uuid.UUID
 	Name     string
-	enabled  bool
-	schedule cron.Schedule
-	maxRuns  int
-	status   Status
-	results  []Result
-	tasks    task.Sequence
+	Enabled  bool
+	Schedule cron.Schedule
+	MaxRuns  int
+	Status   Status
+	Results  []Result
+	Tasks    task.Sequence
 }
 
 func (j *Job) AddResult(r Result) {
-	j.results = append(j.results, r)
+	j.Results = append(j.Results, r)
 }
 func (j *Job) CountRuns() int {
-	return len(j.results)
+	return len(j.Results)
 }
 
 func (j *Job) CurrentResult() Result {
-	return j.results[len(j.results)-1]
+	return j.Results[len(j.Results)-1]
 }
 
 func (j *Job) Disable() {
-	j.enabled = false
+	j.Enabled = false
 }
 
 func (j *Job) Enable() {
-	j.enabled = true
+	j.Enabled = true
 }
 
 func (j *Job) IsActive() bool {
-	return j.status == StatusActive
+	return j.Status == StatusActive
 }
 
 func (j *Job) IsAvailable() bool {
-	return j.status == StatusAvailable
+	return j.Status == StatusAvailable
 }
 
 func (j *Job) IsEligible() bool {
-	if j.maxRuns == 0 {
-		return j.enabled
+	if j.MaxRuns == 0 {
+		return j.Enabled
 	}
 
-	if len(j.results) < j.maxRuns {
-		return j.enabled
+	if len(j.Results) < j.MaxRuns {
+		return j.Enabled
 	}
 	return false
 }
 
 func (j *Job) IsEnabled() bool {
-	return j.enabled
+	return j.Enabled
 }
 
 func (j *Job) IsInactive() bool {
-	return j.IsEligible() && j.status == StatusInactive
+	return j.IsEligible() && j.Status == StatusInactive
 }
 
 func (j *Job) IsRunnable() bool {
-	return j.status == StatusRunnable
+	return j.Status == StatusRunnable
 }
 
 func (j *Job) IsSchedulable() bool {
-	return j.status == StatusSchedulable && j.schedule.IsDue(time.Now())
+	return j.Status == StatusSchedulable && j.Schedule.IsDue(time.Now())
 }
 
-func (j *Job) Results() []Result {
-	return j.results
+func (j *Job) AllResults() []Result {
+	return j.Results
 }
 
 func (j *Job) UpdateResult(r Result) {
-	j.results[len(j.results)-1] = r
+	j.Results[len(j.Results)-1] = r
 }
 
 func (j *Job) SetStatus(s Status) {
-	j.status = s
+	j.Status = s
 }

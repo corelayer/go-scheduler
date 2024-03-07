@@ -131,7 +131,7 @@ func (o *Orchestrator) handleJobs(ctx context.Context) {
 
 			// Run all task for job
 			intercom := task.NewIntercom(job.Name, o.chMessages)
-			job.tasks.Execute(o.taskHandlers, intercom)
+			job.Tasks.Execute(o.taskHandlers, intercom)
 
 			result.finish = time.Now()
 			result.RunTime = result.finish.Sub(result.start)
@@ -221,7 +221,7 @@ func (o *Orchestrator) handleSchedulableJobs(ctx context.Context) {
 					o.chErrors <- err
 				}
 			}
-			d, err := time.ParseDuration(fmt.Sprintf("%ds", o.config.ScheduleInterval))
+			d, err := time.ParseDuration(fmt.Sprintf("%dms", o.config.ScheduleInterval))
 			if err != nil {
 				o.chErrors <- err
 			}
