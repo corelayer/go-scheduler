@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,20 +16,16 @@
 
 package job
 
-import "github.com/corelayer/go-scheduler/pkg/task"
+import (
+	"time"
 
-func NewOrchestratorConfig(maxJobs int, interval int, errF func(err error), msgF func(msg task.IntercomMessage)) OrchestratorConfig {
-	return OrchestratorConfig{
-		MaxJobs:          maxJobs,
-		ScheduleInterval: interval,
-		ErrorHandler:     errF,
-		MessageHandler:   msgF,
-	}
-}
+	"github.com/corelayer/go-scheduler/pkg/task"
+)
 
-type OrchestratorConfig struct {
-	MaxJobs          int
-	ScheduleInterval int
-	ErrorHandler     func(err error)
-	MessageHandler   func(msg task.IntercomMessage)
+type Result struct {
+	start    time.Time
+	finish   time.Time
+	RunTime  time.Duration
+	Status   Status
+	messages []task.Message
 }

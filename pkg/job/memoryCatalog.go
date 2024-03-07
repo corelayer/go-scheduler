@@ -17,7 +17,6 @@
 package job
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -110,7 +109,6 @@ func (c *MemoryCatalog) HasEnabledJobs() bool {
 			disabledCount++
 		}
 	}
-	fmt.Println(enabledCount, disabledCount, enabledCount != 0)
 	return enabledCount != 0
 }
 
@@ -158,10 +156,6 @@ func (c *MemoryCatalog) SchedulableJobs() []Job {
 func (c *MemoryCatalog) Update(job Job) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-
-	if !job.IsInactive() {
-		job.Disable()
-	}
 
 	return c.repository.Update(job)
 }

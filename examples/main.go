@@ -16,6 +16,7 @@ func createJob(i int) job.Job {
 	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(100)
+	m := rnd.Intn(5) + 1
 	tasks := []task.Task{
 		// task.TimeLogTask{},
 		// task.PrintTask{
@@ -42,15 +43,19 @@ func createJob(i int) job.Job {
 		// task.TimeLogTask{},
 	}
 
-	return job.NewJob("Example Job "+strconv.Itoa(i), schedule, 2, task.NewSequence(tasks))
+	if i%100 == 0 {
+		tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
+	}
+
+	return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, m, task.NewSequence(tasks))
 }
 
 func handleError(err error) {
 	fmt.Println(err.Error())
 }
 
-func handleMessage(msg task.Message) {
-	fmt.Println("Message", msg.Task, msg.Data)
+func handleMessage(msg task.IntercomMessage) {
+	fmt.Println(msg.Name, msg.Content.Message)
 }
 
 func main() {
@@ -58,7 +63,7 @@ func main() {
 	r := task.NewHandlerRepository()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	config := job.NewOrchestratorConfig(20, 1, handleError, handleMessage)
+	config := job.NewOrchestratorConfig(10, 1, handleError, nil)
 	o := job.NewOrchestrator(c, r, config)
 
 	err := r.RegisterHandlerPools([]*task.HandlerPool{
@@ -66,49 +71,40 @@ func main() {
 		task.NewHandlerPool(task.NewDefaultEmptyTaskHandler()),
 		task.NewHandlerPool(task.NewDefaultSleepTaskHandler()),
 		task.NewHandlerPool(task.NewDefaultPrintTaskHandler()),
+		task.NewHandlerPool(task.NewDefaultIntercomMessageTaskHandler()),
 	})
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	i := 0
-	for i < 25000 {
-		if i%2500 == 0 {
-			fmt.Println("Adding jobs", i)
-			i++
-			if err = c.Add(createJob(i)); err != nil {
-				panic(err)
-			}
-			// time.Sleep(1 * time.Second)
-		}
-		for i%2500 != 0 {
-			i++
-			if err = c.Add(createJob(i)); err != nil {
-				panic(err)
-			}
+
+	for i < 3000 {
+		i++
+		if err = c.Add(createJob(i)); err != nil {
+			panic(err)
 		}
 	}
-	// current := c.CountRegisteredJobs()
-	// archived := c.CountArchivedJobs()
-	// fmt.Printf("############### Jobs registered/archived: %d/%d\r\n", current, archived)
-	// if current == 0 {
-	// 	break
-	// }
-	// time.Sleep(1 * time.Second)
 
 	go o.Start(ctx)
 
 	for c.HasEnabledJobs() {
-		fmt.Println("waiting")
 		time.Sleep(250 * time.Millisecond)
 	}
 	cancel()
-
+	i = 0
 	for _, j := range c.All() {
 		if j.IsEnabled() {
-			fmt.Println(j)
+			fmt.Println(j.Name)
 		} else {
-			fmt.Println(j.Results())
+			results := j.Results()
+			fmt.Println(j.Name)
+			for _, r := range results {
+				fmt.Println("\t", r.RunTime, r.Status)
+			}
 		}
+		i++
 	}
+	fmt.Println("jobs retrieved", i)
+
 }

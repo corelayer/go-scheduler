@@ -25,18 +25,10 @@ import (
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
-type Result struct {
-	start    time.Time
-	finish   time.Time
-	runTime  time.Duration
-	status   Status
-	messages []task.Message
-}
-
 func NewJob(name string, s cron.Schedule, maxRuns int, tasks task.Sequence) Job {
 	return Job{
 		id:       uuid.New(),
-		name:     name,
+		Name:     name,
 		enabled:  true,
 		schedule: s,
 		maxRuns:  maxRuns,
@@ -48,7 +40,7 @@ func NewJob(name string, s cron.Schedule, maxRuns int, tasks task.Sequence) Job 
 
 type Job struct {
 	id       uuid.UUID
-	name     string
+	Name     string
 	enabled  bool
 	schedule cron.Schedule
 	maxRuns  int
@@ -76,8 +68,23 @@ func (j *Job) Enable() {
 	j.enabled = true
 }
 
+func (j *Job) IsActive() bool {
+	return j.status == StatusActive
+}
+
 func (j *Job) IsAvailable() bool {
 	return j.status == StatusAvailable
+}
+
+func (j *Job) IsEligible() bool {
+	if j.maxRuns == 0 {
+		return j.enabled
+	}
+
+	if len(j.results) < j.maxRuns {
+		return j.enabled
+	}
+	return false
 }
 
 func (j *Job) IsEnabled() bool {
@@ -85,15 +92,7 @@ func (j *Job) IsEnabled() bool {
 }
 
 func (j *Job) IsInactive() bool {
-	if j.maxRuns == 0 {
-		return j.enabled && j.status == StatusInactive
-	}
-
-	if len(j.results) < j.maxRuns {
-		return j.enabled && j.status == StatusInactive
-	}
-
-	return false
+	return j.IsEligible() && j.status == StatusInactive
 }
 
 func (j *Job) IsRunnable() bool {

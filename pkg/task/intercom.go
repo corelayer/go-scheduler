@@ -20,8 +20,14 @@ import (
 	"sync"
 )
 
-func NewIntercom(chOut chan Message) *Intercom {
+type IntercomMessage struct {
+	Name    string
+	Content Message
+}
+
+func NewIntercom(name string, chOut chan IntercomMessage) *Intercom {
 	return &Intercom{
+		name:     name,
 		chOut:    chOut,
 		messages: make([]Message, 0),
 		mux:      &sync.Mutex{},
@@ -29,7 +35,8 @@ func NewIntercom(chOut chan Message) *Intercom {
 }
 
 type Intercom struct {
-	chOut    chan Message
+	name     string
+	chOut    chan IntercomMessage
 	messages []Message
 	mux      *sync.Mutex
 }
@@ -39,7 +46,10 @@ func (c *Intercom) Add(m Message) {
 	defer c.mux.Unlock()
 
 	c.messages = append(c.messages, m)
-	c.chOut <- m
+	c.chOut <- IntercomMessage{
+		Name:    c.name,
+		Content: m,
+	}
 }
 
 func (c *Intercom) CountErrorMessages() int {

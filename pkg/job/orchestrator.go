@@ -31,7 +31,7 @@ func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, conf
 		taskHandlers: taskHandlers,
 		chRunnerIn:   make(chan Job),
 		chRunnerOut:  make(chan Job),
-		chMessages:   make(chan task.Message),
+		chMessages:   make(chan task.IntercomMessage),
 		chErrors:     make(chan error),
 	}
 }
@@ -42,7 +42,7 @@ type Orchestrator struct {
 	taskHandlers *task.HandlerRepository
 	chRunnerIn   chan Job
 	chRunnerOut  chan Job
-	chMessages   chan task.Message
+	chMessages   chan task.IntercomMessage
 	chErrors     chan error
 }
 
@@ -81,8 +81,14 @@ func (o *Orchestrator) handleErrors(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case err := <-o.chErrors:
-			o.config.ErrorHandler(err)
+		case err, ok := <-o.chErrors:
+			if !ok {
+				return
+			}
+
+			if o.config.ErrorHandler != nil {
+				o.config.ErrorHandler(err)
+			}
 		}
 	}
 }
@@ -116,35 +122,28 @@ func (o *Orchestrator) handleJobs(ctx context.Context) {
 			// Update job data
 			result := Result{
 				start:   time.Now(),
-				runTime: 0,
-				status:  StatusActive,
+				RunTime: 0,
+				Status:  StatusActive,
 			}
 			job.AddResult(result)
 			job.SetStatus(StatusActive)
 			o.chRunnerOut <- job
 
 			// Run all task for job
-			intercom := task.NewIntercom(o.chMessages)
+			intercom := task.NewIntercom(job.Name, o.chMessages)
 			job.tasks.Execute(o.taskHandlers, intercom)
 
 			result.finish = time.Now()
+			result.RunTime = result.finish.Sub(result.start)
 			result.messages = intercom.GetAll()
 			if intercom.HasErrors() {
-				result.status = StatusError
+				result.Status = StatusError
 			} else {
-				result.status = StatusCompleted
+				result.Status = StatusCompleted
 			}
 			job.UpdateResult(result)
+			job.SetStatus(result.Status)
 			o.chRunnerOut <- job
-		case job, ok := <-o.chRunnerOut:
-			if !ok {
-				return
-			}
-
-			job.SetStatus(StatusInactive)
-			if err := o.catalog.Update(job); err != nil {
-				o.chErrors <- err
-			}
 		}
 	}
 }
@@ -154,8 +153,15 @@ func (o *Orchestrator) handleMessages(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case message := <-o.chMessages:
-			o.config.MessageHandler(message)
+		case message, ok := <-o.chMessages:
+			if !ok {
+				return
+			}
+
+			if o.config.MessageHandler != nil {
+				o.config.MessageHandler(message)
+
+			}
 		}
 	}
 }
@@ -165,11 +171,18 @@ func (o *Orchestrator) handleResults(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case job := <-o.chRunnerOut:
-			result := job.CurrentResult()
-			result.finish = time.Now()
-			job.UpdateResult(result)
-			job.SetStatus(StatusCompleted)
+		case job, ok := <-o.chRunnerOut:
+			if !ok {
+				return
+			}
+
+			if !job.IsActive() {
+				if !job.IsEligible() {
+					job.Disable()
+				} else {
+					job.SetStatus(StatusInactive)
+				}
+			}
 
 			if err := o.catalog.Update(job); err != nil {
 				o.chErrors <- err
