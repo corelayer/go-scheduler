@@ -25,6 +25,7 @@ type Catalog interface {
 	Delete(jobId uuid.UUID) error
 	Disable(jobId uuid.UUID) error
 	Enable(jobId uuid.UUID) error
+	HasEnabledJobs() bool
 	InactiveJobs() []Job
 	RunnableJobs() []Job
 	SchedulableJobs() []Job
