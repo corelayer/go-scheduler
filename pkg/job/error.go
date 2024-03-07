@@ -18,6 +18,13 @@ package job
 
 import "fmt"
 
+func NewError(kind errKind, err error) Error {
+	return Error{
+		kind: kind,
+		err:  err,
+	}
+}
+
 type Error struct {
 	kind errKind
 	err  error
