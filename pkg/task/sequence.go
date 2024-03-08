@@ -73,7 +73,7 @@ func (s *Sequence) Execute(r *HandlerRepository, c *Intercom) {
 	s.active = true
 	s.mux.Unlock()
 
-	pipeline <- &Pipeline{Intercom: c}
+	pipeline <- &Pipeline{Intercom: c, Data: make(map[string]interface{})}
 
 	for i, t := range s.Tasks {
 		s.mux.Lock()
