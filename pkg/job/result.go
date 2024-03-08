@@ -23,9 +23,10 @@ import (
 )
 
 type Result struct {
-	start    time.Time
-	finish   time.Time
+	Start    time.Time
+	Finish   time.Time
 	RunTime  time.Duration
 	Status   Status
-	messages []task.Message
+	Messages []task.Message
+	Tasks    []task.Task
 }

@@ -160,7 +160,7 @@ func (o *Orchestrator) handleJobs() {
 
 		// Update job data
 		result := Result{
-			start:   time.Now(),
+			Start:   time.Now(),
 			RunTime: 0,
 			Status:  StatusActive,
 		}
@@ -172,16 +172,19 @@ func (o *Orchestrator) handleJobs() {
 		intercom := task.NewIntercom(job.Name, o.chMessages)
 		job.Tasks.Execute(o.taskHandlers, intercom)
 
-		result.finish = time.Now()
-		result.RunTime = result.finish.Sub(result.start)
-		result.messages = intercom.GetAll()
+		result.Finish = time.Now()
+		result.RunTime = result.Finish.Sub(result.Start)
+		result.Tasks = job.Tasks.Executed()
+		result.Messages = intercom.GetAll()
 		if intercom.HasErrors() {
 			result.Status = StatusError
 		} else {
 			result.Status = StatusCompleted
 		}
+		job.Tasks.ResetHistory()
 		job.UpdateResult(result)
 		job.SetStatus(result.Status)
+
 		o.chRunnerOut <- job
 
 		o.mux.Lock()

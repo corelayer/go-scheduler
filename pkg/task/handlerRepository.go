@@ -40,7 +40,7 @@ func (r *HandlerRepository) Execute(t Task, pipeline chan *Pipeline) Task {
 
 	if !found {
 		// If no handler is available, the program cannot continue
-		panic(fmt.Sprintf("could not find handler for task %s", t.Type()))
+		panic(fmt.Sprintf("could not find handlerpool for task %s", t.Type()))
 	}
 	return handler.Execute(t, pipeline)
 }

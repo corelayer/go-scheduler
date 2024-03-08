@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -16,16 +17,19 @@ func createJob(i int) job.Job {
 	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(100)
-	m := rnd.Intn(5) + 1
+	m := rnd.Intn(50) + 1
 	tasks := []task.Task{
 		task.SleepTask{
 			Milliseconds: d,
 		},
 	}
 
-	if i%20 == 0 {
+	if i%2 == 0 {
 		tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
 	}
+
+	d = rnd.Intn(200)
+	tasks = append(tasks, task.SleepTask{Milliseconds: d})
 
 	return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, m, task.NewSequence(tasks))
 }
@@ -59,7 +63,7 @@ func main() {
 
 	i := 0
 
-	for i < 3000 {
+	for i < 4 {
 		i++
 		if err = c.Add(createJob(i)); err != nil {
 			panic(err)
@@ -82,4 +86,14 @@ func main() {
 		}
 		time.Sleep(1 * time.Second)
 	}
+
+	for _, v := range c.All() {
+		var jsonData []byte
+		jsonData, err = json.MarshalIndent(v, "", "\t")
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(jsonData))
+	}
+
 }

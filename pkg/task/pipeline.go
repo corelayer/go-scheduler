@@ -18,5 +18,5 @@ package task
 
 type Pipeline struct {
 	Intercom *Intercom
-	Data     interface{}
+	Data     map[string]interface{}
 }

@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	MAX_CONCURRENT_TASKHANDLER_SLEEP = 10000
+	TASKHANDLER_SLEEP_MAX_CONCURRENT = 10000
 )
 
 func NewDefaultSleepTaskHandler() SleepTaskHandler {
 	return SleepTaskHandler{
-		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_SLEEP,
+		maxConcurrent: TASKHANDLER_SLEEP_MAX_CONCURRENT,
 	}
 }
 
@@ -45,12 +45,9 @@ func (h SleepTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	d, _ := time.ParseDuration(strconv.Itoa(t.(SleepTask).Milliseconds) + "ms")
 	time.Sleep(d)
 
-	select {
-	case pipeline := <-p:
-		if t.WriteToPipeline() {
-			p <- pipeline
-		}
-	default:
+	pipeline := <-p
+	if t.WriteToPipeline() {
+		p <- pipeline
 	}
 
 	return t.SetStatus(StatusCompleted)

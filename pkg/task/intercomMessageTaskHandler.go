@@ -17,12 +17,12 @@
 package task
 
 const (
-	MAX_CONCURRENT_TASKHANDLER_INTERCOM_MESSAGE = 10000
+	TASKHANDLER_INTERCOM_MESSAGE_MAX_CONCURRENT = 10000
 )
 
 func NewDefaultIntercomMessageTaskHandler() IntercomMessageTaskHandler {
 	return IntercomMessageTaskHandler{
-		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_INTERCOM_MESSAGE,
+		maxConcurrent: TASKHANDLER_INTERCOM_MESSAGE_MAX_CONCURRENT,
 	}
 }
 

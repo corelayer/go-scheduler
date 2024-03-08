@@ -33,8 +33,8 @@ func NewJob(name string, s cron.Schedule, maxRuns int, tasks task.Sequence) Job 
 		Schedule: s,
 		MaxRuns:  maxRuns,
 		Status:   StatusInactive,
-		Results:  make([]Result, 0),
 		Tasks:    tasks,
+		History:  make([]Result, 0),
 	}
 }
 
@@ -45,19 +45,19 @@ type Job struct {
 	Schedule cron.Schedule
 	MaxRuns  int
 	Status   Status
-	Results  []Result
 	Tasks    task.Sequence
+	History  []Result
 }
 
 func (j *Job) AddResult(r Result) {
-	j.Results = append(j.Results, r)
+	j.History = append(j.History, r)
 }
 func (j *Job) CountRuns() int {
-	return len(j.Results)
+	return len(j.History)
 }
 
 func (j *Job) CurrentResult() Result {
-	return j.Results[len(j.Results)-1]
+	return j.History[len(j.History)-1]
 }
 
 func (j *Job) Disable() {
@@ -81,7 +81,7 @@ func (j *Job) IsEligible() bool {
 		return j.Enabled
 	}
 
-	if len(j.Results) < j.MaxRuns {
+	if len(j.History) < j.MaxRuns {
 		return j.Enabled
 	}
 	return false
@@ -104,11 +104,11 @@ func (j *Job) IsSchedulable() bool {
 }
 
 func (j *Job) AllResults() []Result {
-	return j.Results
+	return j.History
 }
 
 func (j *Job) UpdateResult(r Result) {
-	j.Results[len(j.Results)-1] = r
+	j.History[len(j.History)-1] = r
 }
 
 func (j *Job) SetStatus(s Status) {

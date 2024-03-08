@@ -17,12 +17,12 @@
 package task
 
 const (
-	MAX_CONCURRENT_TASKHANDLER_EMPTY = 10000
+	TASKHANDLER_EMPTY_MAX_CONCURRENT = 10000
 )
 
 func NewDefaultEmptyTaskHandler() EmptyTaskHandler {
 	return EmptyTaskHandler{
-		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_EMPTY,
+		maxConcurrent: TASKHANDLER_EMPTY_MAX_CONCURRENT,
 	}
 }
 
@@ -37,12 +37,9 @@ type EmptyTaskHandler struct {
 }
 
 func (h EmptyTaskHandler) Execute(t Task, p chan *Pipeline) Task {
-	select {
-	case pipeline := <-p:
-		if t.WriteToPipeline() {
-			p <- pipeline
-		}
-	default:
+	pipeline := <-p
+	if t.WriteToPipeline() {
+		p <- pipeline
 	}
 	return t.SetStatus(StatusCompleted)
 }

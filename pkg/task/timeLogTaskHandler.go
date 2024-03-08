@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	MAX_CONCURRENT_TASKHANDLER_TIMELOG = 10000
+	TASKHANDLER_TIMELOG_MAX_CONCURRENT = 10000
 )
 
 func NewDefaultTimeLogTaskHandler() TimeLogTaskHandler {
 	return TimeLogTaskHandler{
-		maxConcurrency: MAX_CONCURRENT_TASKHANDLER_TIMELOG,
+		maxConcurrency: TASKHANDLER_TIMELOG_MAX_CONCURRENT,
 	}
 }
 
@@ -42,16 +42,11 @@ type TimeLogTaskHandler struct {
 
 func (h TimeLogTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 	task := t.(TimeLogTask)
-
-	select {
-	case pipeline := <-p:
-		task = h.processTask(task, pipeline)
-		if task.WriteToPipeline() {
-			p <- pipeline
-		}
-	default:
+	pipeline := <-p
+	task = h.processTask(task, pipeline)
+	if task.WriteToPipeline() {
+		p <- pipeline
 	}
-
 	return task.SetStatus(StatusCompleted)
 }
 

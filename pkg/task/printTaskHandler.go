@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	MAX_CONCURRENT_TASKHANDLER_PRINT = 10000
+	TASKHANDLER_PRINT_MAX_CONCURRENT = 10000
 )
 
 func NewDefaultPrintTaskHandler() PrintTaskHandler {
 	return PrintTaskHandler{
-		maxConcurrent: MAX_CONCURRENT_TASKHANDLER_PRINT,
+		maxConcurrent: TASKHANDLER_PRINT_MAX_CONCURRENT,
 	}
 }
 
