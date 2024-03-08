@@ -20,7 +20,7 @@ import "github.com/google/uuid"
 
 type Catalog interface {
 	Add(job Job) error
-	All() map[uuid.UUID]Job
+	All() []Job
 	AvailableJobs() []Job
 	Delete(jobId uuid.UUID) error
 	Disable(jobId uuid.UUID) error

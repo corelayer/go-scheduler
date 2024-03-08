@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strconv"
+	"sort"
 	"time"
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
@@ -16,22 +16,24 @@ func createJob(i int) job.Job {
 	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(100)
-	// m := rnd.Intn(50) + 1
+	m := rnd.Intn(5) + 1
 	tasks := []task.Task{
 		task.SleepTask{
 			Milliseconds: d,
 		},
 	}
 
-	// if i%2 == 0 {
-	// 	tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
-	// }
+	if i%3 == 0 {
+		tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
+	}
 
 	d = rnd.Intn(200)
 	tasks = append(tasks, task.SleepTask{Milliseconds: d})
 
-	return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, 1, task.NewSequence(tasks))
-	// return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, m, task.NewSequence(tasks))
+	if i%25 == 0 {
+		return job.NewJob("Example_Job_"+fmt.Sprintf("%04d", i), schedule, 1, task.NewSequence(tasks))
+	}
+	return job.NewJob("Example_Job_"+fmt.Sprintf("%04d", i), schedule, m, task.NewSequence(tasks))
 }
 
 func handleError(err error) {
@@ -63,7 +65,7 @@ func main() {
 
 	i := 0
 
-	for i < 1000 {
+	for i < 3000 {
 		i++
 		if err = c.Add(createJob(i)); err != nil {
 			panic(err)
@@ -77,16 +79,26 @@ func main() {
 		if !o.IsStarted() {
 			break
 		}
-		stats := o.Statistics()
-		fmt.Println("A-J", stats.ActiveJobs, "\t\tE-J", stats.EnabledJobs, "\t\tD-J", stats.DisabledJobs, "\t\tTotal Jobs", stats.TotalJobs, "\t\tA-T", stats.ActiveTasks, "\tF-T", stats.FinishedTasks, "\tSummary", (stats.ActiveTasks + stats.FinishedTasks), "/", stats.TotalTasks)
 
-		if stats.EnabledJobs == 0 && !exiting {
+		stats := o.Statistics()
+		fmt.Println(stats.Job)
+		if stats.Job.EnabledJobs == 0 && !exiting {
 			exiting = true
 			cancel()
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	//
+	fmt.Println("--------------------------------------")
+	// jobs := c.All()
+	stats := o.Statistics()
+
+	sort.SliceStable(stats.Tasks, func(i, j int) bool {
+		return stats.Tasks[i].Name < stats.Tasks[j].Name
+	})
+
+	for _, stat := range stats.Tasks {
+		fmt.Println(stat)
+	} //
 	// for _, v := range c.All() {
 	// 	var jsonData []byte
 	// 	jsonData, err = json.MarshalIndent(v, "", "\t")

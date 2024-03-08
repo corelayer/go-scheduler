@@ -17,7 +17,6 @@
 package task
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -91,7 +90,7 @@ func (s *Sequence) Execute(r *HandlerRepository, c *Intercom) {
 		s.mux.Lock()
 		s.activeIdx = i
 		s.executed = append(s.executed, t) // Copy active task so we can follow status
-		fmt.Println(s.activeIdx, s.executed[s.activeIdx])
+		// fmt.Println(s.activeIdx, s.executed[s.activeIdx])
 		s.mux.Unlock()
 
 		result := r.Execute(t, pipeline)

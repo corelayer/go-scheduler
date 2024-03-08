@@ -22,17 +22,33 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
+type JobStats struct {
+	ConfiguredJobs  float64
+	EnabledJobs     float64
+	DisabledJobs    float64
+	ActiveJobs      float64
+	AvailableJobs   float64
+	InactiveJobs    float64
+	PendingJobs     float64
+	RunnableJobs    float64
+	SchedulableJobs float64
+}
+
+type TaskStats struct {
+	Uuid      uuid.UUID
+	Name      string
+	Completed float64
+	Total     float64
+}
+
 type OrchestratorStats struct {
-	ActiveJobs    float64
-	EnabledJobs   float64
-	DisabledJobs  float64
-	TotalJobs     float64
-	TotalTasks    float64
-	ActiveTasks   float64
-	FinishedTasks float64
+	Job   JobStats
+	Tasks []TaskStats
 }
 
 func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, config OrchestratorConfig) *Orchestrator {
@@ -94,51 +110,61 @@ func (o *Orchestrator) Start(ctx context.Context) {
 
 func (o *Orchestrator) Statistics() OrchestratorStats {
 	o.mux.Lock()
+	jobs := o.catalog.All()
 	defer o.mux.Unlock()
 
+	configuredJobs := len(jobs)
 	enabledJobs := 0
 	disabledJobs := 0
 	activeJobs := 0
-	totalTasks := 0
-	activeTasks := 0
-	finishedTasks := 0
+	availableJobs := 0
+	inactiveJobs := 0
+	pendingJobs := 0
+	runnableJobs := 0
+	schedulableJobs := 0
+	finishedJobs := 0
+	completedTasks := make([]TaskStats, 0)
 
-	jobs := o.catalog.All()
 	for _, job := range jobs {
-		totalTasks += job.Tasks.Count() * job.MaxRuns
-		if job.IsEnabled() {
+		switch job.IsEnabled() {
+		case true:
 			enabledJobs++
-			switch job.IsActive() {
-			case true:
-				activeJobs++
-				if job.Tasks.IsActive() {
-					// activeTasks += job.Tasks.CountExecuted()
-					activeTasks += job.Tasks.ActiveIndex()
-				}
-
-				if len(job.History) > 0 {
-					finishedTasks += len(job.CurrentResult().Tasks) * len(job.History)
-				}
-			case false:
-				if len(job.History) > 0 {
-					finishedTasks += len(job.CurrentResult().Tasks) * len(job.History)
-				}
-			}
-		} else {
+		case false:
 			disabledJobs++
-			if len(job.History) > 0 {
-				finishedTasks += job.Tasks.Count() * len(job.History)
-			}
 		}
+
+		switch job.Status {
+		case StatusActive:
+			activeJobs++
+		case StatusAvailable:
+			availableJobs++
+		case StatusInactive:
+			inactiveJobs++
+			finishedJobs += job.CountRuns()
+		case StatusPending:
+			pendingJobs++
+		case StatusRunnable:
+			runnableJobs++
+		case StatusSchedulable:
+			schedulableJobs++
+		default:
+		}
+
+		completedTasks = append(completedTasks, TaskStats{Uuid: job.Uuid, Name: job.Name, Completed: float64(len(job.CurrentResult().Tasks)), Total: float64(job.Tasks.Count())})
 	}
 	return OrchestratorStats{
-		ActiveJobs:    float64(activeJobs),
-		EnabledJobs:   float64(enabledJobs),
-		DisabledJobs:  float64(disabledJobs),
-		TotalJobs:     float64(len(jobs)),
-		TotalTasks:    float64(totalTasks),
-		ActiveTasks:   float64(activeTasks),
-		FinishedTasks: float64(finishedTasks),
+		Job: JobStats{
+			ConfiguredJobs:  float64(configuredJobs),
+			EnabledJobs:     float64(enabledJobs),
+			DisabledJobs:    float64(disabledJobs),
+			ActiveJobs:      float64(activeJobs),
+			AvailableJobs:   float64(availableJobs),
+			InactiveJobs:    float64(inactiveJobs),
+			PendingJobs:     float64(pendingJobs),
+			RunnableJobs:    float64(runnableJobs),
+			SchedulableJobs: float64(schedulableJobs),
+		},
+		Tasks: completedTasks,
 	}
 }
 

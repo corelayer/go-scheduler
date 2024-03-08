@@ -41,7 +41,7 @@ func (c *MemoryCatalog) Add(job Job) error {
 	return c.repository.Add(job)
 }
 
-func (c *MemoryCatalog) All() map[uuid.UUID]Job {
+func (c *MemoryCatalog) All() []Job {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 

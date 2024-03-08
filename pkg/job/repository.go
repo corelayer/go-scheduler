@@ -17,7 +17,6 @@
 package job
 
 import (
-	"maps"
 	"sync"
 
 	"github.com/google/uuid"
@@ -39,13 +38,13 @@ type RepositoryWriter interface {
 
 func NewRepository() *Repository {
 	return &Repository{
-		data: make(map[uuid.UUID]Job),
+		jobs: make([]Job, 0),
 		mux:  sync.Mutex{},
 	}
 }
 
 type Repository struct {
-	data map[uuid.UUID]Job
+	jobs []Job
 	mux  sync.Mutex
 }
 
@@ -53,11 +52,13 @@ func (r *Repository) Add(job Job) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[job.Uuid]; found {
-		return ErrExist
+	for _, j := range r.jobs {
+		if job.Uuid == j.Uuid {
+			return ErrExist
+		}
 	}
 
-	r.data[job.Uuid] = job
+	r.jobs = append(r.jobs, job)
 	return nil
 }
 
@@ -65,60 +66,63 @@ func (r *Repository) Count() int {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	return len(r.data)
+	return len(r.jobs)
 }
 
 func (r *Repository) Delete(id uuid.UUID) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[id]; found {
-		return ErrNotFound
+	for i, j := range r.jobs {
+		if j.Uuid == id {
+			r.jobs = append(r.jobs[:i], r.jobs[i+1:]...)
+			return nil
+		}
 	}
-
-	delete(r.data, id)
-	return nil
+	return ErrNotFound
 }
 
 func (r *Repository) Exists(id uuid.UUID) bool {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[id]; !found {
-		return false
+	for _, j := range r.jobs {
+		if j.Uuid == id {
+			return true
+		}
 	}
 
-	return true
+	return false
 }
 
 func (r *Repository) Get(id uuid.UUID) (Job, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[id]; !found {
-		return Job{}, ErrNotFound
+	for _, j := range r.jobs {
+		if j.Uuid == id {
+			return j, nil
+		}
 	}
-
-	return r.data[id], nil
+	return Job{}, ErrNotFound
 }
 
-func (r *Repository) GetAll() map[uuid.UUID]Job {
+func (r *Repository) GetAll() []Job {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	var output = make(map[uuid.UUID]Job)
-	maps.Copy(output, r.data)
-	return output
+	return r.jobs
 }
 
 func (r *Repository) Update(job Job) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	if _, found := r.data[job.Uuid]; !found {
-		return ErrNotFound
+	for i, j := range r.jobs {
+		if j.Uuid == job.Uuid {
+			r.jobs[i] = job
+			return nil
+		}
 	}
-
-	r.data[job.Uuid] = job
-	return nil
+	return ErrNotFound
 }
