@@ -39,7 +39,7 @@ func (s *Sequence) ActiveTask() Task {
 	if s.IsActive() {
 		s.mux.Lock()
 		defer s.mux.Unlock()
-		return s.Tasks[s.activeIdx]
+		return s.executed[s.activeIdx]
 	}
 	return nil
 }
@@ -65,6 +65,17 @@ func (s *Sequence) Count() int {
 	return len(s.Tasks)
 }
 
+func (s *Sequence) CountExecuted() int {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	executed := len(s.executed)
+	if s.active && executed != 0 {
+		executed--
+	}
+	return executed
+}
+
 func (s *Sequence) Execute(r *HandlerRepository, c *Intercom) {
 	pipeline := make(chan *Pipeline, 1)
 	defer close(pipeline)
@@ -78,12 +89,13 @@ func (s *Sequence) Execute(r *HandlerRepository, c *Intercom) {
 	for i, t := range s.Tasks {
 		s.mux.Lock()
 		s.activeIdx = i
+		s.executed = append(s.executed, t) // Copy active task so we can follow status
 		s.mux.Unlock()
 
 		result := r.Execute(t, pipeline)
 
 		s.mux.Lock()
-		s.executed = append(s.executed, result)
+		s.executed[s.activeIdx] = result
 		s.mux.Unlock()
 	}
 
