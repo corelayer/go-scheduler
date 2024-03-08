@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -17,21 +16,22 @@ func createJob(i int) job.Job {
 	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d := rnd.Intn(100)
-	m := rnd.Intn(50) + 1
+	// m := rnd.Intn(50) + 1
 	tasks := []task.Task{
 		task.SleepTask{
 			Milliseconds: d,
 		},
 	}
 
-	if i%2 == 0 {
-		tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
-	}
+	// if i%2 == 0 {
+	// 	tasks = append(tasks, task.IntercomMessageTask{Message: fmt.Sprintf("intercom_message_%d", i)})
+	// }
 
 	d = rnd.Intn(200)
 	tasks = append(tasks, task.SleepTask{Milliseconds: d})
 
-	return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, m, task.NewSequence(tasks))
+	return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, 1, task.NewSequence(tasks))
+	// return job.NewJob("Example_Job_"+strconv.Itoa(i), schedule, m, task.NewSequence(tasks))
 }
 
 func handleError(err error) {
@@ -39,7 +39,7 @@ func handleError(err error) {
 }
 
 func handleMessage(msg task.IntercomMessage) {
-	fmt.Println(msg.Name, msg.Content.Message)
+	// fmt.Println(msg.Name, msg.Content.Message)
 }
 
 func main() {
@@ -63,7 +63,7 @@ func main() {
 
 	i := 0
 
-	for i < 4 {
+	for i < 1000 {
 		i++
 		if err = c.Add(createJob(i)); err != nil {
 			panic(err)
@@ -78,22 +78,22 @@ func main() {
 			break
 		}
 		stats := o.Statistics()
-		fmt.Println("Active", stats.ActiveJobs, "-", "Enabled", stats.EnabledJobs)
+		fmt.Println("A-J", stats.ActiveJobs, "\t\tE-J", stats.EnabledJobs, "\t\tD-J", stats.DisabledJobs, "\t\tTotal Jobs", stats.TotalJobs, "\t\tA-T", stats.ActiveTasks, "\tF-T", stats.FinishedTasks, "\tSummary", (stats.ActiveTasks + stats.FinishedTasks), "/", stats.TotalTasks)
 
 		if stats.EnabledJobs == 0 && !exiting {
 			exiting = true
 			cancel()
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 	}
-
-	for _, v := range c.All() {
-		var jsonData []byte
-		jsonData, err = json.MarshalIndent(v, "", "\t")
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(string(jsonData))
-	}
+	//
+	// for _, v := range c.All() {
+	// 	var jsonData []byte
+	// 	jsonData, err = json.MarshalIndent(v, "", "\t")
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	fmt.Println(string(jsonData))
+	// }
 
 }

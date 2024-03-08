@@ -26,9 +26,13 @@ import (
 )
 
 type OrchestratorStats struct {
-	ActiveJobs  float64
-	EnabledJobs float64
-	TotalJobs   float64
+	ActiveJobs    float64
+	EnabledJobs   float64
+	DisabledJobs  float64
+	TotalJobs     float64
+	TotalTasks    float64
+	ActiveTasks   float64
+	FinishedTasks float64
 }
 
 func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, config OrchestratorConfig) *Orchestrator {
@@ -93,16 +97,48 @@ func (o *Orchestrator) Statistics() OrchestratorStats {
 	defer o.mux.Unlock()
 
 	enabledJobs := 0
+	disabledJobs := 0
+	activeJobs := 0
+	totalTasks := 0
+	activeTasks := 0
+	finishedTasks := 0
+
 	jobs := o.catalog.All()
 	for _, job := range jobs {
+		totalTasks += job.Tasks.Count() * job.MaxRuns
 		if job.IsEnabled() {
 			enabledJobs++
+			switch job.IsActive() {
+			case true:
+				activeJobs++
+				if job.Tasks.IsActive() {
+					// activeTasks += job.Tasks.CountExecuted()
+					activeTasks += job.Tasks.ActiveIndex()
+				}
+
+				if len(job.History) > 0 {
+					finishedTasks += len(job.CurrentResult().Tasks) * len(job.History)
+				}
+			case false:
+				if len(job.History) > 0 {
+					finishedTasks += len(job.CurrentResult().Tasks) * len(job.History)
+				}
+			}
+		} else {
+			disabledJobs++
+			if len(job.History) > 0 {
+				finishedTasks += job.Tasks.Count() * len(job.History)
+			}
 		}
 	}
 	return OrchestratorStats{
-		TotalJobs:   float64(len(jobs)),
-		ActiveJobs:  float64(o.activeJobs),
-		EnabledJobs: float64(enabledJobs),
+		ActiveJobs:    float64(activeJobs),
+		EnabledJobs:   float64(enabledJobs),
+		DisabledJobs:  float64(disabledJobs),
+		TotalJobs:     float64(len(jobs)),
+		TotalTasks:    float64(totalTasks),
+		ActiveTasks:   float64(activeTasks),
+		FinishedTasks: float64(finishedTasks),
 	}
 }
 
