@@ -15,32 +15,12 @@ import (
 func createJob(i int) job.Job {
 	schedule, _ := cron.NewSchedule("* * * * * *")
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	// d := rnd.Intn(100)
+	d := rnd.Intn(100)
 	m := rnd.Intn(5) + 1
 	tasks := []task.Task{
-		// task.TimeLogTask{},
-		// task.PrintTask{
-		// 	Message:     fmt.Sprintf("Job %d - Task 1", i),
-		// 	ReadInput:   false,
-		// 	WriteOutput: false,
-		// },
-		// task.EmptyTask{},
-		// task.SleepTask{
-		// 	Milliseconds: d,
-		// },
-		// task.PrintTask{
-		// 	Message:     fmt.Sprintf("Job %d - Task 2", i),
-		// 	ReadInput:   true,
-		// 	WriteOutput: true,
-		// },
-		// task.SleepTask{
-		// 	Milliseconds: d,
-		// 	WriteOutput:  true,
-		// },
-		// task.PrintTask{
-		// 	Message: fmt.Sprintf("Job %d", i),
-		// },
-		// task.TimeLogTask{},
+		task.SleepTask{
+			Milliseconds: d,
+		},
 	}
 
 	if i%20 == 0 {
@@ -63,7 +43,7 @@ func main() {
 	r := task.NewHandlerRepository()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	config := job.NewOrchestratorConfig(1000, 1, handleError, handleMessage)
+	config := job.NewOrchestratorConfig(2000, 100, handleError, nil)
 	o := job.NewOrchestrator(c, r, config)
 
 	err := r.RegisterHandlerPools([]*task.HandlerPool{
@@ -86,25 +66,20 @@ func main() {
 		}
 	}
 
-	go o.Start(ctx)
+	o.Start(ctx)
 
-	for c.HasEnabledJobs() {
-		time.Sleep(250 * time.Millisecond)
-	}
-	cancel()
-	i = 0
-	for _, j := range c.All() {
-		if j.IsEnabled() {
-			fmt.Println(j.Name)
-		} else {
-			results := j.AllResults()
-			fmt.Println(j.Name)
-			for _, r := range results {
-				fmt.Println("\t", r.RunTime, r.Status)
-			}
+	exiting := false
+	for {
+		if !o.IsStarted() {
+			break
 		}
-		i++
-	}
-	fmt.Println("jobs retrieved", i)
+		stats := o.Statistics()
+		fmt.Println("Active", stats.ActiveJobs, "-", "Enabled", stats.EnabledJobs)
 
+		if stats.EnabledJobs == 0 && !exiting {
+			exiting = true
+			cancel()
+		}
+		time.Sleep(1 * time.Second)
+	}
 }

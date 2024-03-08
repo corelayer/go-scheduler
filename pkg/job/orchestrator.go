@@ -19,20 +19,28 @@ package job
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
+
+type OrchestratorStats struct {
+	ActiveJobs  int
+	EnabledJobs int
+}
 
 func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, config OrchestratorConfig) *Orchestrator {
 	return &Orchestrator{
 		config:       config,
 		catalog:      catalog,
 		taskHandlers: taskHandlers,
-		chRunnerIn:   make(chan Job),
+		chRunnerIn:   make(chan Job, config.MaxJobs),
 		chRunnerOut:  make(chan Job),
 		chMessages:   make(chan task.IntercomMessage),
 		chErrors:     make(chan error),
+		activeJobs:   0,
+		mux:          sync.Mutex{},
 	}
 }
 
@@ -44,19 +52,54 @@ type Orchestrator struct {
 	chRunnerOut  chan Job
 	chMessages   chan task.IntercomMessage
 	chErrors     chan error
+	activeJobs   int
+	isStarted    bool
+	mux          sync.Mutex
+}
+
+func (o *Orchestrator) IsStarted() bool {
+	o.mux.Lock()
+	defer o.mux.Unlock()
+
+	return o.isStarted
 }
 
 func (o *Orchestrator) Start(ctx context.Context) {
-	go o.handleErrors(ctx)
-	go o.handleMessages(ctx)
+	// Make sure the orchestrator is ready to handle errors and messages before launching any other goroutine
+	go o.handleErrors()
+	go o.handleMessages()
+
+	// Launch goroutines in the order of the "normal" job flow
 	go o.handleInactiveJobs(ctx)
 	go o.handleAvailableJobs(ctx)
 	go o.handleSchedulableJobs(ctx)
 	go o.handleRunnableJobs(ctx)
-	go o.handleResults(ctx)
+	go o.handleResults()
 
 	for i := 0; i < o.config.MaxJobs; i++ {
-		go o.handleJobs(ctx)
+		go o.handleJobs()
+	}
+
+	go o.handleShutdown(ctx)
+
+	o.mux.Lock()
+	o.isStarted = true
+	o.mux.Unlock()
+}
+
+func (o *Orchestrator) Statistics() OrchestratorStats {
+	o.mux.Lock()
+	defer o.mux.Unlock()
+
+	enabledJobs := 0
+	for _, job := range o.catalog.All() {
+		if job.IsEnabled() {
+			enabledJobs++
+		}
+	}
+	return OrchestratorStats{
+		ActiveJobs:  o.activeJobs,
+		EnabledJobs: enabledJobs,
 	}
 }
 
@@ -76,19 +119,14 @@ func (o *Orchestrator) handleAvailableJobs(ctx context.Context) {
 	}
 }
 
-func (o *Orchestrator) handleErrors(ctx context.Context) {
+func (o *Orchestrator) handleErrors() {
 	for {
-		select {
-		case <-ctx.Done():
+		err, ok := <-o.chErrors
+		if !ok {
 			return
-		case err, ok := <-o.chErrors:
-			if !ok {
-				return
-			}
-
-			if o.config.ErrorHandler != nil {
-				o.config.ErrorHandler(err)
-			}
+		}
+		if o.config.ErrorHandler != nil {
+			o.config.ErrorHandler(err)
 		}
 	}
 }
@@ -109,84 +147,81 @@ func (o *Orchestrator) handleInactiveJobs(ctx context.Context) {
 	}
 }
 
-func (o *Orchestrator) handleJobs(ctx context.Context) {
+func (o *Orchestrator) handleJobs() {
 	for {
-		select {
-		case <-ctx.Done():
+		job, ok := <-o.chRunnerIn
+		if !ok {
 			return
-		case job, ok := <-o.chRunnerIn:
-			if !ok {
-				return
-			}
+		}
 
-			// Update job data
-			result := Result{
-				start:   time.Now(),
-				RunTime: 0,
-				Status:  StatusActive,
-			}
-			job.AddResult(result)
-			job.SetStatus(StatusActive)
-			o.chRunnerOut <- job
+		o.mux.Lock()
+		o.activeJobs++
+		o.mux.Unlock()
 
-			// Run all task for job
-			intercom := task.NewIntercom(job.Name, o.chMessages)
-			job.Tasks.Execute(o.taskHandlers, intercom)
+		// Update job data
+		result := Result{
+			start:   time.Now(),
+			RunTime: 0,
+			Status:  StatusActive,
+		}
+		job.AddResult(result)
+		job.SetStatus(StatusActive)
+		o.chRunnerOut <- job
 
-			result.finish = time.Now()
-			result.RunTime = result.finish.Sub(result.start)
-			result.messages = intercom.GetAll()
-			if intercom.HasErrors() {
-				result.Status = StatusError
+		// Run all task for job
+		intercom := task.NewIntercom(job.Name, o.chMessages)
+		job.Tasks.Execute(o.taskHandlers, intercom)
+
+		result.finish = time.Now()
+		result.RunTime = result.finish.Sub(result.start)
+		result.messages = intercom.GetAll()
+		if intercom.HasErrors() {
+			result.Status = StatusError
+		} else {
+			result.Status = StatusCompleted
+		}
+		job.UpdateResult(result)
+		job.SetStatus(result.Status)
+		o.chRunnerOut <- job
+
+		o.mux.Lock()
+		o.activeJobs--
+		o.mux.Unlock()
+	}
+}
+
+func (o *Orchestrator) handleMessages() {
+	for {
+		message, ok := <-o.chMessages
+		if !ok {
+			return
+		}
+		if o.config.MessageHandler != nil {
+			o.config.MessageHandler(message)
+
+		}
+	}
+}
+
+func (o *Orchestrator) handleResults() {
+	for {
+		job, ok := <-o.chRunnerOut
+		if !ok {
+			return
+		}
+
+		if !job.IsActive() {
+			if !job.IsEligible() {
+				job.Disable()
 			} else {
-				result.Status = StatusCompleted
-			}
-			job.UpdateResult(result)
-			job.SetStatus(result.Status)
-			o.chRunnerOut <- job
-		}
-	}
-}
-
-func (o *Orchestrator) handleMessages(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case message, ok := <-o.chMessages:
-			if !ok {
-				return
-			}
-
-			if o.config.MessageHandler != nil {
-				o.config.MessageHandler(message)
-
+				job.SetStatus(StatusInactive)
 			}
 		}
-	}
-}
 
-func (o *Orchestrator) handleResults(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case job, ok := <-o.chRunnerOut:
-			if !ok {
-				return
-			}
-
-			if !job.IsActive() {
-				if !job.IsEligible() {
-					job.Disable()
-				} else {
-					job.SetStatus(StatusInactive)
-				}
-			}
-
-			if err := o.catalog.Update(job); err != nil {
-				o.chErrors <- err
-			}
+		if job.Status == StatusCompleted {
+		}
+		if err := o.catalog.Update(job); err != nil {
+			o.chErrors <- err
 		}
 	}
 }
@@ -195,6 +230,7 @@ func (o *Orchestrator) handleRunnableJobs(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			close(o.chRunnerIn)
 			return
 		default:
 			for _, job := range o.catalog.RunnableJobs() {
@@ -226,6 +262,32 @@ func (o *Orchestrator) handleSchedulableJobs(ctx context.Context) {
 				o.chErrors <- err
 			}
 			time.Sleep(d)
+		}
+	}
+}
+
+func (o *Orchestrator) handleShutdown(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			for {
+				o.mux.Lock()
+				if o.activeJobs != 0 {
+					o.mux.Unlock()
+					time.Sleep(100 * time.Millisecond)
+					continue
+				} else {
+					close(o.chRunnerOut)
+					close(o.chMessages)
+					close(o.chErrors)
+					o.mux.Unlock()
+					break
+				}
+			}
+			o.mux.Lock()
+			o.isStarted = false
+			o.mux.Unlock()
+			return
 		}
 	}
 }

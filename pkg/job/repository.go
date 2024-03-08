@@ -17,6 +17,7 @@
 package job
 
 import (
+	"maps"
 	"sync"
 
 	"github.com/google/uuid"
@@ -105,7 +106,9 @@ func (r *Repository) GetAll() map[uuid.UUID]Job {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
-	return r.data
+	var output = make(map[uuid.UUID]Job)
+	maps.Copy(output, r.data)
+	return output
 }
 
 func (r *Repository) Update(job Job) error {
