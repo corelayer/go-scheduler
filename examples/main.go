@@ -43,7 +43,7 @@ func main() {
 	r := task.NewHandlerRepository()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	config := job.NewOrchestratorConfig(2000, 100, handleError, nil)
+	config := job.NewOrchestratorConfig(2000, 100, handleError, handleMessage)
 	o := job.NewOrchestrator(c, r, config)
 
 	err := r.RegisterHandlerPools([]*task.HandlerPool{

@@ -218,8 +218,6 @@ func (o *Orchestrator) handleResults() {
 			}
 		}
 
-		if job.Status == StatusCompleted {
-		}
 		if err := o.catalog.Update(job); err != nil {
 			o.chErrors <- err
 		}
@@ -267,27 +265,22 @@ func (o *Orchestrator) handleSchedulableJobs(ctx context.Context) {
 }
 
 func (o *Orchestrator) handleShutdown(ctx context.Context) {
+	<-ctx.Done()
 	for {
-		select {
-		case <-ctx.Done():
-			for {
-				o.mux.Lock()
-				if o.activeJobs != 0 {
-					o.mux.Unlock()
-					time.Sleep(100 * time.Millisecond)
-					continue
-				} else {
-					close(o.chRunnerOut)
-					close(o.chMessages)
-					close(o.chErrors)
-					o.mux.Unlock()
-					break
-				}
-			}
-			o.mux.Lock()
-			o.isStarted = false
+		o.mux.Lock()
+		if o.activeJobs != 0 {
 			o.mux.Unlock()
-			return
+			time.Sleep(100 * time.Millisecond)
+			continue
+		} else {
+			close(o.chRunnerOut)
+			close(o.chMessages)
+			close(o.chErrors)
+			o.mux.Unlock()
+			break
 		}
 	}
+	o.mux.Lock()
+	o.isStarted = false
+	o.mux.Unlock()
 }
