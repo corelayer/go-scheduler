@@ -44,6 +44,7 @@ type TaskStats struct {
 	Name      string
 	Completed float64
 	Total     float64
+	HasErrors bool
 }
 
 type OrchestratorStats struct {
@@ -150,7 +151,15 @@ func (o *Orchestrator) Statistics() OrchestratorStats {
 		default:
 		}
 
-		completedTasks = append(completedTasks, TaskStats{Uuid: job.Uuid, Name: job.Name, Completed: float64(len(job.CurrentResult().Tasks)), Total: float64(job.Tasks.Count())})
+		currentResult := job.CurrentResult()
+		hasErrors := false
+		for _, t := range currentResult.Tasks {
+			if t.Status() == task.StatusError || t.Status() == task.StatusCanceled {
+				hasErrors = true
+				break
+			}
+		}
+		completedTasks = append(completedTasks, TaskStats{Uuid: job.Uuid, Name: job.Name, Completed: float64(len(currentResult.Tasks)), Total: float64(job.Tasks.Count()), HasErrors: hasErrors})
 	}
 	return OrchestratorStats{
 		Job: JobStats{
