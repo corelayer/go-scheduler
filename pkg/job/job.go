@@ -57,7 +57,10 @@ func (j *Job) CountRuns() int {
 }
 
 func (j *Job) CurrentResult() Result {
-	return j.History[len(j.History)-1]
+	if len(j.History) > 0 {
+		return j.History[len(j.History)-1]
+	}
+	return Result{}
 }
 
 func (j *Job) Disable() {
@@ -108,7 +111,11 @@ func (j *Job) AllResults() []Result {
 }
 
 func (j *Job) UpdateResult(r Result) {
-	j.History[len(j.History)-1] = r
+	if len(j.History) > 0 {
+		j.History[len(j.History)-1] = r
+	} else {
+		j.History = append(j.History, r)
+	}
 }
 
 func (j *Job) SetStatus(s Status) {

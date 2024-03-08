@@ -28,6 +28,7 @@ import (
 type OrchestratorStats struct {
 	ActiveJobs  int
 	EnabledJobs int
+	TotalJobs   int
 }
 
 func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, config OrchestratorConfig) *Orchestrator {
@@ -92,12 +93,14 @@ func (o *Orchestrator) Statistics() OrchestratorStats {
 	defer o.mux.Unlock()
 
 	enabledJobs := 0
-	for _, job := range o.catalog.All() {
+	jobs := o.catalog.All()
+	for _, job := range jobs {
 		if job.IsEnabled() {
 			enabledJobs++
 		}
 	}
 	return OrchestratorStats{
+		TotalJobs:   len(jobs),
 		ActiveJobs:  o.activeJobs,
 		EnabledJobs: enabledJobs,
 	}
