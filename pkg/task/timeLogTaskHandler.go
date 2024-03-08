@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	TASKHANDLER_TIMELOG_MAX_CONCURRENT = 10000
+	MaxConcurrentTaskHandlerTimeLog = 10000
 )
 
 func NewDefaultTimeLogTaskHandler() TimeLogTaskHandler {
 	return TimeLogTaskHandler{
-		maxConcurrency: TASKHANDLER_TIMELOG_MAX_CONCURRENT,
+		maxConcurrency: MaxConcurrentTaskHandlerTimeLog,
 	}
 }
 

@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	TASKHANDLER_SLEEP_MAX_CONCURRENT = 10000
+	MaxConcurrentTaskHandlerSleep = 10000
 )
 
 func NewDefaultSleepTaskHandler() SleepTaskHandler {
 	return SleepTaskHandler{
-		maxConcurrent: TASKHANDLER_SLEEP_MAX_CONCURRENT,
+		maxConcurrent: MaxConcurrentTaskHandlerSleep,
 	}
 }
 

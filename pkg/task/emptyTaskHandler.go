@@ -17,15 +17,16 @@
 package task
 
 const (
-	TASKHANDLER_EMPTY_MAX_CONCURRENT = 10000
+	MaxConcurrentTaskHandlerEmpty = 10000
 )
 
 func NewDefaultEmptyTaskHandler() EmptyTaskHandler {
 	return EmptyTaskHandler{
-		maxConcurrent: TASKHANDLER_EMPTY_MAX_CONCURRENT,
+		maxConcurrent: MaxConcurrentTaskHandlerEmpty,
 	}
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func NewEmptyTaskHandler(maxConcurrent int) EmptyTaskHandler {
 	return EmptyTaskHandler{
 		maxConcurrent: maxConcurrent,

@@ -166,7 +166,7 @@ func (o *Orchestrator) handleJobs() {
 		}
 		job.AddResult(result)
 		job.SetStatus(StatusActive)
-		// Send job update to catalog so we can track active jobs
+		// Send job update to catalog, so we can track active jobs
 		o.chRunnerOut <- job
 
 		// Run all task for job
