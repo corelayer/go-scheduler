@@ -26,9 +26,9 @@ import (
 )
 
 type OrchestratorStats struct {
-	ActiveJobs  int
-	EnabledJobs int
-	TotalJobs   int
+	ActiveJobs  float64
+	EnabledJobs float64
+	TotalJobs   float64
 }
 
 func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, config OrchestratorConfig) *Orchestrator {
@@ -100,9 +100,9 @@ func (o *Orchestrator) Statistics() OrchestratorStats {
 		}
 	}
 	return OrchestratorStats{
-		TotalJobs:   len(jobs),
-		ActiveJobs:  o.activeJobs,
-		EnabledJobs: enabledJobs,
+		TotalJobs:   float64(len(jobs)),
+		ActiveJobs:  float64(o.activeJobs),
+		EnabledJobs: float64(enabledJobs),
 	}
 }
 
