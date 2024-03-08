@@ -33,7 +33,7 @@ func (t EmptyTask) Status() Status {
 }
 
 func (t EmptyTask) Type() string {
-	return reflect.TypeOf(EmptyTask{}).String()
+	return reflect.TypeOf(t).String()
 }
 
 func (t EmptyTask) SetStatus(s Status) Task {

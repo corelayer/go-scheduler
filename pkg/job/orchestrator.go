@@ -166,6 +166,7 @@ func (o *Orchestrator) handleJobs() {
 		}
 		job.AddResult(result)
 		job.SetStatus(StatusActive)
+		// Send job update to catalog so we can track active jobs
 		o.chRunnerOut <- job
 
 		// Run all task for job
@@ -181,8 +182,8 @@ func (o *Orchestrator) handleJobs() {
 		} else {
 			result.Status = StatusCompleted
 		}
-		job.Tasks.ResetHistory()
 		job.UpdateResult(result)
+		job.Tasks.ResetHistory()
 		job.SetStatus(result.Status)
 
 		o.chRunnerOut <- job
@@ -213,7 +214,9 @@ func (o *Orchestrator) handleResults() {
 			return
 		}
 
+		// Job status is not active --> StatusCompleted or StatusError
 		if !job.IsActive() {
+			// Disable job if it does not need to be run again
 			if !job.IsEligible() {
 				job.Disable()
 			} else {
