@@ -22,35 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/corelayer/go-scheduler/pkg/task"
 )
-
-type JobStats struct {
-	ConfiguredJobs  float64
-	EnabledJobs     float64
-	DisabledJobs    float64
-	ActiveJobs      float64
-	AvailableJobs   float64
-	InactiveJobs    float64
-	PendingJobs     float64
-	RunnableJobs    float64
-	SchedulableJobs float64
-}
-
-type TaskStats struct {
-	Uuid      uuid.UUID
-	Name      string
-	Completed float64
-	Total     float64
-	HasErrors bool
-}
-
-type OrchestratorStats struct {
-	Job   JobStats
-	Tasks []TaskStats
-}
 
 func NewOrchestrator(catalog Catalog, taskHandlers *task.HandlerRepository, config OrchestratorConfig) *Orchestrator {
 	return &Orchestrator{
@@ -162,7 +135,7 @@ func (o *Orchestrator) Statistics() OrchestratorStats {
 		completedTasks = append(completedTasks, TaskStats{Uuid: job.Uuid, Name: job.Name, Completed: float64(len(currentResult.Tasks)), Total: float64(job.Tasks.Count()), HasErrors: hasErrors})
 	}
 	return OrchestratorStats{
-		Job: JobStats{
+		Job: GlobalStats{
 			ConfiguredJobs:  float64(configuredJobs),
 			EnabledJobs:     float64(enabledJobs),
 			DisabledJobs:    float64(disabledJobs),
