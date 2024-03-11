@@ -16,20 +16,38 @@
 
 package job
 
-import "github.com/corelayer/go-scheduler/pkg/task"
+import (
+	"fmt"
+	"time"
 
-func NewOrchestratorConfig(maxJobs int, interval int, errF func(err error), msgF func(msg task.IntercomMessage)) OrchestratorConfig {
+	"github.com/corelayer/go-scheduler/pkg/task"
+)
+
+func NewOrchestratorConfig(maxJobs int, delay int, interval int, errF func(err error), msgF func(msg task.IntercomMessage)) (OrchestratorConfig, error) {
+	var (
+		err  error
+		i, d time.Duration
+	)
+	if d, err = time.ParseDuration(fmt.Sprintf("%dms", delay)); err != nil {
+		return OrchestratorConfig{}, err
+	}
+	if i, err = time.ParseDuration(fmt.Sprintf("%dms", interval)); err != nil {
+		return OrchestratorConfig{}, err
+	}
+
 	return OrchestratorConfig{
 		MaxJobs:          maxJobs,
-		ScheduleInterval: interval,
+		StartDelay:       d,
+		ScheduleInterval: i,
 		ErrorHandler:     errF,
 		MessageHandler:   msgF,
-	}
+	}, nil
 }
 
 type OrchestratorConfig struct {
 	MaxJobs          int
-	ScheduleInterval int // milliseconds
+	ScheduleInterval time.Duration // milliseconds
+	StartDelay       time.Duration
 	ErrorHandler     func(err error)
 	MessageHandler   func(msg task.IntercomMessage)
 }

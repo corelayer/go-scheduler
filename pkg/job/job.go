@@ -23,10 +23,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/corelayer/go-scheduler/pkg/cron"
-	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
-func NewJob(name string, s cron.Schedule, maxRuns int, tasks task.Sequence) Job {
+func NewJob(name string, s cron.Schedule, maxRuns int, tasks Sequence) Job {
 	return Job{
 		Uuid:     uuid.New(),
 		Name:     name,
@@ -47,7 +46,7 @@ type Job struct {
 	Schedule cron.Schedule
 	MaxRuns  int
 	Status   Status
-	Tasks    task.Sequence
+	Tasks    Sequence
 	History  []Result
 	mux      *sync.Mutex
 }
@@ -130,6 +129,13 @@ func (j *Job) IsInactive() bool {
 	j.mux.Lock()
 	defer j.mux.Unlock()
 	return eligible && j.Status == StatusInactive
+}
+
+func (j *Job) IsPending() bool {
+	j.mux.Lock()
+	defer j.mux.Lock()
+
+	return j.Status == StatusPending
 }
 
 func (j *Job) IsRunnable() bool {

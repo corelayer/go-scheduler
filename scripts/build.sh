@@ -15,4 +15,4 @@
 # *    limitations under the License.
 # */
 
-go build -o output/examples/example examples/main.go
+go build -race -o output/examples/example examples/main.go

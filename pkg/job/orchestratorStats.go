@@ -16,18 +16,23 @@
 
 package job
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type GlobalStats struct {
 	ConfiguredJobs  float64
 	EnabledJobs     float64
 	DisabledJobs    float64
-	ActiveJobs      float64
-	AvailableJobs   float64
 	InactiveJobs    float64
-	PendingJobs     float64
-	RunnableJobs    float64
+	AvailableJobs   float64
 	SchedulableJobs float64
+	RunnableJobs    float64
+	PendingJobs     float64
+	ActiveJobs      float64
+	RunningJobs     float64
+	CompletedTasks  float64
+	TotalTasks      float64
 }
 
 type TaskStats struct {

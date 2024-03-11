@@ -25,8 +25,11 @@ import (
 type Result struct {
 	Start    time.Time
 	Finish   time.Time
-	RunTime  time.Duration
 	Status   Status
 	Messages []task.Message
 	Tasks    []task.Task
+}
+
+func (r Result) Runtime() time.Duration {
+	return r.Finish.Sub(r.Start)
 }

@@ -24,138 +24,160 @@ import (
 
 func NewMemoryCatalog() *MemoryCatalog {
 	return &MemoryCatalog{
-		repository: NewRepository(),
-		mux:        sync.Mutex{},
+		jobs: make(map[uuid.UUID]Job, 0),
+		mux:  sync.Mutex{},
 	}
 }
 
 type MemoryCatalog struct {
-	repository *Repository
-	mux        sync.Mutex
+	jobs map[uuid.UUID]Job
+	mux  sync.Mutex
 }
 
 func (c *MemoryCatalog) Add(job Job) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.repository.Add(job)
+	for k := range c.jobs {
+		if job.Uuid == k {
+			return ErrExist
+		}
+	}
+
+	c.jobs[job.Uuid] = job
+	return nil
 }
 
 func (c *MemoryCatalog) All() []Job {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.repository.GetAll()
+	jobs := make([]Job, 0)
+	for _, job := range c.jobs {
+		jobs = append(jobs, job)
+	}
+	return jobs
 }
 
 func (c *MemoryCatalog) AvailableJobs() []Job {
+	return c.GetJobsByStatus(StatusAvailable)
+}
+
+func (c *MemoryCatalog) Count() int {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	var available = make([]Job, 0)
-
-	jobs := c.repository.GetAll()
-	for _, job := range jobs {
-		if job.IsAvailable() {
-			available = append(available, job)
-		}
-	}
-	return available
+	return len(c.jobs)
 }
 
 func (c *MemoryCatalog) Delete(jobId uuid.UUID) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.repository.Delete(jobId)
+	if _, found := c.jobs[jobId]; !found {
+		return ErrNotFound
+	}
+	delete(c.jobs, jobId)
+	return nil
 }
 
 func (c *MemoryCatalog) Disable(jobId uuid.UUID) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	job, err := c.repository.Get(jobId)
-	if err != nil {
-		return err
+	if _, found := c.jobs[jobId]; !found {
+		return ErrNotFound
 	}
-
+	job := c.jobs[jobId]
 	job.Disable()
-	return c.repository.Update(job)
+	c.jobs[jobId] = job
+
+	return nil
 }
 
 func (c *MemoryCatalog) Enable(jobId uuid.UUID) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	job, err := c.repository.Get(jobId)
-	if err != nil {
-		return err
+	if _, found := c.jobs[jobId]; !found {
+		return ErrNotFound
 	}
-
+	job := c.jobs[jobId]
 	job.Enable()
-	return c.repository.Update(job)
+	c.jobs[jobId] = job
+
+	return nil
+}
+
+func (c *MemoryCatalog) Exists(id uuid.UUID) bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if _, found := c.jobs[id]; found {
+		return true
+	}
+	return false
+}
+
+func (c *MemoryCatalog) Get(id uuid.UUID) (Job, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if _, found := c.jobs[id]; !found {
+		return Job{}, ErrNotFound
+	}
+	return c.jobs[id], nil
+}
+
+func (c *MemoryCatalog) GetJobsByStatus(status Status) []Job {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	var jobs = make([]Job, 0)
+	for _, job := range c.jobs {
+		if job.Status == status {
+			jobs = append(jobs, job)
+		}
+	}
+	return jobs
+
 }
 
 func (c *MemoryCatalog) HasEnabledJobs() bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	var enabledCount int
-	var disabledCount int
-	for _, job := range c.repository.GetAll() {
+	for _, job := range c.jobs {
 		if job.IsEnabled() {
-			enabledCount++
-		} else {
-			disabledCount++
+			return true
 		}
 	}
-	return enabledCount != 0
+	return false
 }
 
 func (c *MemoryCatalog) InactiveJobs() []Job {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	return c.GetJobsByStatus(StatusInactive)
+}
 
-	var inactive = make([]Job, 0)
-	for _, job := range c.repository.GetAll() {
-		if job.IsInactive() {
-			inactive = append(inactive, job)
-		}
-	}
-	return inactive
+func (c *MemoryCatalog) PendingJobs() []Job {
+	return c.GetJobsByStatus(StatusPending)
 }
 
 func (c *MemoryCatalog) RunnableJobs() []Job {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	var runnable = make([]Job, 0)
-	jobs := c.repository.GetAll()
-	for _, job := range jobs {
-		if job.IsRunnable() {
-			runnable = append(runnable, job)
-		}
-	}
-	return runnable
+	return c.GetJobsByStatus(StatusRunnable)
 }
 
 func (c *MemoryCatalog) SchedulableJobs() []Job {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	var schedulable = make([]Job, 0)
-	jobs := c.repository.GetAll()
-	for _, job := range jobs {
-		if job.IsSchedulable() {
-			schedulable = append(schedulable, job)
-		}
-	}
-	return schedulable
+	return c.GetJobsByStatus(StatusSchedulable)
 }
 
 func (c *MemoryCatalog) Update(job Job) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.repository.Update(job)
+	if _, found := c.jobs[job.Uuid]; !found {
+		return ErrNotFound
+	}
+	c.jobs[job.Uuid] = job
+	return nil
 }

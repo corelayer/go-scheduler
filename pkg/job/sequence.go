@@ -14,13 +14,15 @@
  *    limitations under the License.
  */
 
-package task
+package job
 
 import (
 	"sync"
+
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
-func NewSequence(tasks []Task) Sequence {
+func NewSequence(tasks []task.Task) Sequence {
 	return Sequence{
 		Tasks: tasks,
 		mux:   &sync.Mutex{},
@@ -28,14 +30,14 @@ func NewSequence(tasks []Task) Sequence {
 }
 
 type Sequence struct {
-	Tasks     []Task
-	executed  []Task
+	Tasks     []task.Task
+	executed  []task.Task
 	active    bool
 	activeIdx int
 	mux       *sync.Mutex
 }
 
-func (s *Sequence) ActiveTask() Task {
+func (s *Sequence) ActiveTask() task.Task {
 	if s.IsActive() {
 		s.mux.Lock()
 		defer s.mux.Unlock()
@@ -51,7 +53,7 @@ func (s *Sequence) ActiveIndex() int {
 	return s.activeIdx
 }
 
-func (s *Sequence) All() []Task {
+func (s *Sequence) All() []task.Task {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
@@ -76,36 +78,7 @@ func (s *Sequence) CountExecuted() int {
 	return executed
 }
 
-func (s *Sequence) Execute(r *HandlerRepository, c *Intercom) {
-	pipeline := make(chan *Pipeline, 1)
-	defer close(pipeline)
-
-	s.mux.Lock()
-	s.active = true
-	s.mux.Unlock()
-
-	pipeline <- &Pipeline{Intercom: c, Data: make(map[string]interface{})}
-
-	for i, t := range s.Tasks {
-		s.mux.Lock()
-		s.activeIdx = i
-		s.executed = append(s.executed, t) // Copy active task so we can follow status
-		// fmt.Println(s.activeIdx, s.executed[s.activeIdx])
-		s.mux.Unlock()
-
-		result := r.Execute(t, pipeline)
-
-		s.mux.Lock()
-		s.executed[s.activeIdx] = result
-		s.mux.Unlock()
-	}
-
-	s.mux.Lock()
-	s.active = false
-	s.mux.Unlock()
-}
-
-func (s *Sequence) Executed() []Task {
+func (s *Sequence) Executed() []task.Task {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
@@ -119,11 +92,11 @@ func (s *Sequence) IsActive() bool {
 	return s.active
 }
 
-func (s *Sequence) RegisterTask(t Task) {
+func (s *Sequence) RegisterTask(t task.Task) {
 	s.Tasks = append(s.Tasks, t)
 }
 
-func (s *Sequence) RegisterTasks(t []Task) {
+func (s *Sequence) RegisterTasks(t []task.Task) {
 	s.Tasks = append(s.Tasks, t...)
 }
 
