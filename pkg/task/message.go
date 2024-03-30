@@ -16,9 +16,16 @@
 
 package task
 
+import "log/slog"
+
 type Message struct {
 	Message string
 	Task    string
 	Type    MessageType
 	Data    interface{}
+}
+
+type Log struct {
+	Level slog.Level
+	Attrs []slog.Attr
 }
