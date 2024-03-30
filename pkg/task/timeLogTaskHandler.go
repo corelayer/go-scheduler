@@ -66,7 +66,7 @@ func (h TimeLogTaskHandler) processTask(t TimeLogTask, p *Pipeline) TimeLogTask 
 		Type:    LogMessage,
 		Task:    t.Name(),
 		Data:    timestamp,
-	})
+	}, nil)
 	t.Timestamp = timestamp
 
 	return t

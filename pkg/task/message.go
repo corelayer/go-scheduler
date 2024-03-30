@@ -25,7 +25,25 @@ type Message struct {
 	Data    interface{}
 }
 
-type Log struct {
+type LogData struct {
 	Level slog.Level
 	Attrs []slog.Attr
+}
+
+func NewLogMessage(message string, t Task, data interface{}) Message {
+	return Message{
+		Message: message,
+		Task:    t.Type(),
+		Type:    LogMessage,
+		Data:    data,
+	}
+}
+
+func NewErrorMessage(message string, t Task, err error) Message {
+	return Message{
+		Message: message,
+		Task:    t.Type(),
+		Type:    ErrorMessage,
+		Data:    err,
+	}
 }

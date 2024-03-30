@@ -23,7 +23,7 @@ import (
 type IntercomMessage struct {
 	Name    string
 	Content Message
-	Log     Log
+	Log     *LogData
 }
 
 func NewIntercom(name string, chOut chan IntercomMessage) *Intercom {
@@ -42,7 +42,7 @@ type Intercom struct {
 	mux      *sync.Mutex
 }
 
-func (c *Intercom) Add(m Message, l Log) {
+func (c *Intercom) Add(m Message, l *LogData) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 

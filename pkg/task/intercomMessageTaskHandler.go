@@ -51,7 +51,7 @@ func (h IntercomMessageTaskHandler) Execute(t Task, p chan *Pipeline) Task {
 		Task:    task.Type(),
 		Type:    LogMessage,
 		Data:    nil,
-	})
+	}, nil)
 
 	if t.WriteToPipeline() {
 		p <- pipeline
