@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #/*
 # * Copyright 2023 CoreLayer BV
 # *
@@ -15,4 +15,11 @@
 # *    limitations under the License.
 # */
 
-go build -race -o output/examples/example examples/main.go
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
+
+cd "$DIR" || exit
+
+echo "Cleaning up previous builds and packages"
+rm -rf output

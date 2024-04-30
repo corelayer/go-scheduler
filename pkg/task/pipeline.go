@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,21 +14,9 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-func NewRunnerConfig(maxJobs int, r *TaskHandlerRepository, chInput chan Job, chOutput chan Job) RunnerConfig {
-	c := RunnerConfig{
-		MaxJobs:      maxJobs,
-		TaskHandlers: r,
-		chInput:      chInput,
-		chOutput:     chOutput,
-	}
-	return c
-}
-
-type RunnerConfig struct {
-	MaxJobs      int
-	TaskHandlers *TaskHandlerRepository
-	chInput      chan Job
-	chOutput     chan Job
+type Pipeline struct {
+	Intercom *Intercom
+	Data     map[string]interface{}
 }

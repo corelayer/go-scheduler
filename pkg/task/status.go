@@ -14,21 +14,18 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-import "github.com/google/uuid"
+type Status int
 
-type Catalog interface {
-	Add(job Job) error
-	All() []Job
-	AvailableJobs() []Job
-	Delete(jobId uuid.UUID) error
-	Disable(jobId uuid.UUID) error
-	Enable(jobId uuid.UUID) error
-	HasEnabledJobs() bool
-	InactiveJobs() []Job
-	PendingJobs() []Job
-	RunnableJobs() []Job
-	SchedulableJobs() []Job
-	Update(job Job) error
+func (s Status) String() string {
+	return [...]string{"none", "pending", "completed", "error", "canceled"}[s]
 }
+
+const (
+	StatusNone Status = iota
+	StatusPending
+	StatusCompleted
+	StatusError
+	StatusCanceled
+)

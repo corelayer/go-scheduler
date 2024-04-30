@@ -18,43 +18,30 @@ package task
 
 import (
 	"reflect"
-	"strconv"
-	"time"
-
-	"github.com/corelayer/go-scheduler/pkg/job"
 )
 
 type SleepTask struct {
 	Milliseconds int
-	WriteOutput  bool
+	status       Status
 }
 
-func (t SleepTask) WriteToPipeline() bool {
-	return t.WriteOutput
+func (t SleepTask) Name() string {
+	return "sleep"
 }
 
-func (t SleepTask) GetTaskType() string {
+func (t SleepTask) Status() Status {
+	return t.status
+}
+
+func (t SleepTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 
-type SleepTaskHandler struct{}
-
-func (h SleepTaskHandler) GetTaskType() string {
-	return SleepTask{}.GetTaskType()
+func (t SleepTask) SetStatus(s Status) Task {
+	t.status = s
+	return t
 }
 
-func (h SleepTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(SleepTask)
-	d, _ := time.ParseDuration(strconv.Itoa(task.Milliseconds) + "ms")
-	time.Sleep(d)
-
-	select {
-	case data := <-pipeline:
-		if task.WriteToPipeline() {
-			pipeline <- data
-		}
-	default:
-	}
-
-	return task
+func (t SleepTask) WriteToPipeline() bool {
+	return true
 }

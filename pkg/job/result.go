@@ -14,44 +14,22 @@
  *    limitations under the License.
  */
 
-package task
+package job
 
 import (
-	"reflect"
 	"time"
 
-	"github.com/corelayer/go-scheduler/pkg/job"
+	"github.com/corelayer/go-scheduler/pkg/task"
 )
 
-type TimeLogTask struct {
-	timestamp time.Time
+type Result struct {
+	Start    time.Time
+	Finish   time.Time
+	Status   Status
+	Messages []task.Message
+	Tasks    []task.Task
 }
 
-func (t TimeLogTask) WriteToPipeline() bool {
-	return true
-}
-
-func (t TimeLogTask) GetTaskType() string {
-	return reflect.TypeOf(t).String()
-}
-
-type TimeLogTaskHandler struct{}
-
-func (h TimeLogTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(TimeLogTask)
-	task.timestamp = time.Now()
-
-	select {
-	case data := <-pipeline:
-		if task.WriteToPipeline() {
-			pipeline <- data
-		}
-	default:
-	}
-
-	return task
-}
-
-func (h TimeLogTaskHandler) GetTaskType() string {
-	return TimeLogTask{}.GetTaskType()
+func (r Result) Runtime() time.Duration {
+	return r.Finish.Sub(r.Start)
 }

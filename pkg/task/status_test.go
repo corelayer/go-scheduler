@@ -14,21 +14,23 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-import "github.com/google/uuid"
+import "testing"
 
-type Catalog interface {
-	Add(job Job) error
-	All() []Job
-	AvailableJobs() []Job
-	Delete(jobId uuid.UUID) error
-	Disable(jobId uuid.UUID) error
-	Enable(jobId uuid.UUID) error
-	HasEnabledJobs() bool
-	InactiveJobs() []Job
-	PendingJobs() []Job
-	RunnableJobs() []Job
-	SchedulableJobs() []Job
-	Update(job Job) error
+func TestStatus_String(t *testing.T) {
+	var (
+		result []string
+		wanted = []string{"none", "pending", "completed", "error", "canceled"}
+	)
+
+	for i := 0; i < len(wanted); i++ {
+		result = append(result, Status(i).String())
+	}
+
+	for j := 0; j < len(wanted); j++ {
+		if result[j] != wanted[j] {
+			t.Errorf("invalid string: got %s expected %s", result[j], wanted[j])
+		}
+	}
 }

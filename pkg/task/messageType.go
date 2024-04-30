@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,33 +14,16 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-func NewTaskSequence(tasks []Task) TaskSequence {
-	return TaskSequence{
-		Tasks: tasks,
-	}
-}
+const (
+	ErrorMessage MessageType = iota
+	StatusMessage
+	LogMessage
+)
 
-type TaskSequence struct {
-	pipeline chan interface{}
-	Tasks    []Task
-}
+type MessageType int
 
-func (s TaskSequence) RegisterTask(t Task) TaskSequence {
-	s.Tasks = append(s.Tasks, t)
-	return s
-}
-
-func (s TaskSequence) RegisterTasks(t []Task) TaskSequence {
-	s.Tasks = append(s.Tasks, t...)
-	return s
-}
-
-func (s TaskSequence) Run(r *TaskHandlerRepository) {
-	p := make(chan interface{}, 1)
-	defer close(p)
-	for i, t := range s.Tasks {
-		s.Tasks[i] = r.Execute(t, p)
-	}
+func (s MessageType) String() string {
+	return [...]string{"error", "status", "log"}[s]
 }

@@ -17,50 +17,31 @@
 package task
 
 import (
-	"fmt"
 	"reflect"
-
-	"github.com/corelayer/go-scheduler/pkg/job"
 )
 
 type PrintTask struct {
-	Message     string
-	ReadInput   bool
-	PrintInput  bool
-	WriteOutput bool
+	Message string
+	status  Status
 }
 
-func (t PrintTask) WriteToPipeline() bool {
-	return t.WriteOutput
+func (t PrintTask) Name() string {
+	return "print"
 }
 
-func (t PrintTask) GetTaskType() string {
+func (t PrintTask) Status() Status {
+	return t.status
+}
+
+func (t PrintTask) Type() string {
 	return reflect.TypeOf(t).String()
 }
 
-type PrintTaskHandler struct{}
-
-func (h PrintTaskHandler) GetTaskType() string {
-	return PrintTask{}.GetTaskType()
+func (t PrintTask) SetStatus(s Status) Task {
+	t.status = s
+	return t
 }
 
-func (h PrintTaskHandler) Execute(t job.Task, pipeline chan interface{}) job.Task {
-	task := t.(PrintTask)
-	if task.ReadInput {
-		select {
-		case data := <-pipeline:
-			fmt.Println(task.Message)
-			if task.PrintInput {
-				fmt.Println(data)
-			}
-			if task.WriteToPipeline() {
-				pipeline <- data
-			}
-		default:
-			fmt.Println(task.Message)
-		}
-	} else {
-		fmt.Println(task.Message)
-	}
-	return task
+func (t PrintTask) WriteToPipeline() bool {
+	return true
 }

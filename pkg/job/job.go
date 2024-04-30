@@ -17,6 +17,7 @@
 package job
 
 import (
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,31 +25,154 @@ import (
 	"github.com/corelayer/go-scheduler/pkg/cron"
 )
 
-type Job struct {
-	Uuid     uuid.UUID
-	Enabled  bool
-	Status   Status
-	Schedule cron.Schedule
-	Repeat   bool
-	Name     string
-	Tasks    TaskSequence
+func NewJob(name string, s cron.Schedule, maxRuns int, tasks Sequence) Job {
+	return Job{
+		Uuid:     uuid.New(),
+		Name:     name,
+		Enabled:  true,
+		Schedule: s,
+		MaxRuns:  maxRuns,
+		Status:   StatusInactive,
+		Tasks:    tasks,
+		History:  make([]Result, 0),
+		mux:      &sync.Mutex{},
+	}
 }
 
-func (j *Job) IsDue() bool {
-	if !j.Enabled {
-		return false
+type Job struct {
+	Uuid     uuid.UUID
+	Name     string
+	Enabled  bool
+	Schedule cron.Schedule
+	MaxRuns  int
+	Status   Status
+	Tasks    Sequence
+	History  []Result
+	mux      *sync.Mutex
+}
+
+func (j *Job) AddResult(r Result) {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	j.History = append(j.History, r)
+}
+func (j *Job) CountRuns() int {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return len(j.History)
+}
+
+func (j *Job) CurrentResult() Result {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	if len(j.History) > 0 {
+		return j.History[len(j.History)-1]
+	}
+	return Result{}
+}
+
+func (j *Job) Disable() {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	j.Enabled = false
+}
+
+func (j *Job) Enable() {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	j.Enabled = true
+}
+
+func (j *Job) IsActive() bool {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return j.Status == StatusActive
+}
+
+func (j *Job) IsAvailable() bool {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return j.Status == StatusAvailable
+}
+
+func (j *Job) IsEligible() bool {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	if j.MaxRuns == 0 {
+		return j.Enabled
 	}
 
-	if j.Schedule.IsDue(time.Now()) {
-		return true
+	if len(j.History) < j.MaxRuns {
+		return j.Enabled
 	}
 	return false
 }
 
-func (j *Job) SetStatus(status Status) {
-	j.Status = status
+func (j *Job) IsEnabled() bool {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return j.Enabled
+}
+
+func (j *Job) IsInactive() bool {
+	eligible := j.IsEligible()
+
+	j.mux.Lock()
+	defer j.mux.Unlock()
+	return eligible && j.Status == StatusInactive
 }
 
 func (j *Job) IsPending() bool {
+	j.mux.Lock()
+	defer j.mux.Lock()
+
 	return j.Status == StatusPending
+}
+
+func (j *Job) IsRunnable() bool {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return j.Status == StatusRunnable
+}
+
+func (j *Job) IsSchedulable() bool {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return j.Status == StatusSchedulable && j.Schedule.IsDue(time.Now())
+}
+
+func (j *Job) AllResults() []Result {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	return j.History
+}
+
+func (j *Job) UpdateResult(r Result) {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	if len(j.History) > 0 {
+		j.History[len(j.History)-1] = r
+	} else {
+		j.History = append(j.History, r)
+	}
+}
+
+func (j *Job) SetStatus(s Status) {
+	j.mux.Lock()
+	defer j.mux.Unlock()
+
+	j.Status = s
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,4 +14,32 @@
  *    limitations under the License.
  */
 
-package job
+package task
+
+import (
+	"log/slog"
+)
+
+type Task interface {
+	Name() string
+	Status() Status
+	Type() string
+	SetStatus(s Status) Task
+	WriteToPipeline() bool
+}
+
+func LogTaskAttr(t Task) slog.Attr {
+	return slog.Group(
+		"task",
+		slog.String("name", t.Name()),
+		slog.String("type", t.Type()),
+		slog.String("status", t.Status().String()),
+	)
+}
+
+func LogErrAttr(err error) slog.Attr {
+	return slog.Group(
+		"error",
+		slog.String("message", err.Error()),
+	)
+}

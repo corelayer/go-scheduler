@@ -14,30 +14,34 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
 import (
-	"strconv"
-	"time"
+	"reflect"
 )
 
-func NewSchedulerConfig(maxJobs int, chRunner chan Job, chUpdate chan Job) SchedulerConfig {
-	return SchedulerConfig{
-		ScheduleDelayMilliseconds: 500,
-		MaxJobs:                   maxJobs,
-		chRunner:                  chRunner,
-		chUpdate:                  chUpdate,
-	}
+type IntercomMessageTask struct {
+	Message string
+	status  Status
 }
 
-type SchedulerConfig struct {
-	ScheduleDelayMilliseconds int
-	MaxJobs                   int
-	chRunner                  chan Job
-	chUpdate                  chan Job
+func (t IntercomMessageTask) Name() string {
+	return "intercom"
 }
 
-func (c SchedulerConfig) GetScheduleDelayDuration() time.Duration {
-	d, _ := time.ParseDuration(strconv.Itoa(c.ScheduleDelayMilliseconds) + "ms")
-	return d
+func (t IntercomMessageTask) Status() Status {
+	return t.status
+}
+
+func (t IntercomMessageTask) Type() string {
+	return reflect.TypeOf(t).String()
+}
+
+func (t IntercomMessageTask) SetStatus(s Status) Task {
+	t.status = s
+	return t
+}
+
+func (t IntercomMessageTask) WriteToPipeline() bool {
+	return true
 }

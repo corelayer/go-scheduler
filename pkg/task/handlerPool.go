@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,40 +14,49 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
 import (
 	"sync"
 )
 
-func NewTaskHandlerPool(h TaskHandler, maxConcurrent int) *TaskHandlerPool {
-	return &TaskHandlerPool{
+func NewHandlerPool(h Handler) *HandlerPool {
+	return &HandlerPool{
 		handler:         h,
-		concurrentMax:   maxConcurrent,
+		concurrentMax:   h.MaxConcurrent(),
 		concurrentCount: 0,
-		mux:             sync.Mutex{},
+		mux:             &sync.Mutex{},
 	}
 }
 
-type TaskHandlerPool struct {
-	handler         TaskHandler
+type HandlerPool struct {
+	handler         Handler
 	concurrentMax   int
 	concurrentCount int
-	mux             sync.Mutex
+	mux             *sync.Mutex
 }
 
-func (p *TaskHandlerPool) GetTaskType() string {
-	return p.handler.GetTaskType()
+func (p *HandlerPool) ActiveHandlers() int {
+	p.mux.Lock()
+	defer p.mux.Unlock()
+
+	return p.concurrentCount
 }
 
-func (p *TaskHandlerPool) Execute(t Task, pipeline chan interface{}) Task {
-	var output Task
+func (p *HandlerPool) AvailableHandlers() int {
+	p.mux.Lock()
+	defer p.mux.Unlock()
+
+	return p.concurrentMax - p.concurrentCount
+}
+
+func (p *HandlerPool) Execute(t Task, pipeline chan *Pipeline) Task {
 	for {
 		p.mux.Lock()
 		if p.concurrentCount < p.concurrentMax {
 			p.concurrentCount++
 			p.mux.Unlock()
-			output = p.handler.Execute(t, pipeline)
+			t = p.handler.Execute(t, pipeline)
 			break
 		}
 		p.mux.Unlock()
@@ -55,5 +64,9 @@ func (p *TaskHandlerPool) Execute(t Task, pipeline chan interface{}) Task {
 	p.mux.Lock()
 	p.concurrentCount--
 	p.mux.Unlock()
-	return output
+	return t
+}
+
+func (p *HandlerPool) Type() string {
+	return p.handler.Type()
 }

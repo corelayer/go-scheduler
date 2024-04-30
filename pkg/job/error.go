@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,19 +16,36 @@
 
 package job
 
-import "github.com/google/uuid"
+import "fmt"
 
-type Catalog interface {
-	Add(job Job) error
-	All() []Job
-	AvailableJobs() []Job
-	Delete(jobId uuid.UUID) error
-	Disable(jobId uuid.UUID) error
-	Enable(jobId uuid.UUID) error
-	HasEnabledJobs() bool
-	InactiveJobs() []Job
-	PendingJobs() []Job
-	RunnableJobs() []Job
-	SchedulableJobs() []Job
-	Update(job Job) error
+func NewError(kind errKind, err error) Error {
+	return Error{
+		kind: kind,
+		err:  err,
+	}
 }
+
+type Error struct {
+	kind errKind
+	err  error
+}
+
+func (e Error) Error() string {
+	return e.kind.String()
+}
+
+type errKind int
+
+func (k errKind) String() string {
+	return fmt.Sprintf("%d", k)
+}
+
+const (
+	ErrKindNotFound errKind = iota
+	ErrKindExist
+)
+
+var (
+	ErrNotFound = Error{kind: ErrKindNotFound}
+	ErrExist    = Error{kind: ErrKindExist}
+)

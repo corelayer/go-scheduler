@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 CoreLayer BV
+ * Copyright 2024 CoreLayer BV
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,14 +14,36 @@
  *    limitations under the License.
  */
 
-package job
+package task
 
-type Task interface {
-	WriteToPipeline() bool
-	GetTaskType() string
+import "log/slog"
+
+type Message struct {
+	Message string
+	Task    string
+	Type    MessageType
+	Data    interface{}
 }
 
-type TaskHandler interface {
-	Execute(t Task, pipeline chan interface{}) Task
-	GetTaskType() string
+type LogData struct {
+	Level slog.Level
+	Attrs []slog.Attr
+}
+
+func NewLogMessage(message string, t Task, data interface{}) Message {
+	return Message{
+		Message: message,
+		Task:    t.Type(),
+		Type:    LogMessage,
+		Data:    data,
+	}
+}
+
+func NewErrorMessage(message string, t Task, err error) Message {
+	return Message{
+		Message: message,
+		Task:    t.Type(),
+		Type:    ErrorMessage,
+		Data:    err,
+	}
 }
